@@ -1,0 +1,14 @@
+.home-container {
+  text-align: center;
+  margin-top: 50px;
+  padding: 0 20px;
+}
+
+.home-logo {
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: 320px;
+  min-height: 100px;
+  margin-bottom: 20px;
+}
