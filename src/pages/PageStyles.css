@@ -1,5 +1,63 @@
+/* src/pages/PageStyles.css */
+
 .page-container {
-  text-align: center;
-  margin-top: 50px;
-  padding: 0 20px;
+  /* Gardons un padding vertical pour le haut et le bas de la page */
+  padding-top: 20px;
+  padding-bottom: 20px;
+
+  /* Ajoutez un padding horizontal pour les marges de sécurité sur les côtés */
+  /* J'ai mis 30px comme exemple, ajustez selon votre préférence */
+  padding-left: 30px;
+  padding-right: 30px;
+
+  /* SUPPRIMEZ LES LIGNES SUIVANTES pour permettre au contenu de prendre toute la largeur */
+  /* max-width: 960px; */
+  /* margin: 0 auto; */
+
+  color: white; /* Couleur du texte par défaut */
+  width: 100%; /* Assurez-vous qu'il prenne 100% de la largeur disponible */
+  box-sizing: border-box; /* IMPORTANT : Inclut les paddings dans la largeur totale */
 }
+
+/* Les styles existants pour .guild-header-row, .guild-title, .delete-guild-button restent inchangés */
+.guild-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.guild-title {
+  margin: 0;
+  font-size: 2em;
+  color: #61dafb;
+  word-break: break-word;
+}
+
+.delete-guild-button {
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.delete-guild-button:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+}
+
+.delete-guild-button:active {
+  transform: translateY(0);
+}
+
+/* Ajoutez d'autres styles génériques de page ici si nécessaire */

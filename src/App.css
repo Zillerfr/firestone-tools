@@ -1,17 +1,59 @@
-/* Réinitialisation de base */
-* {
-  box-sizing: border-box; /* Inclut padding et border dans la largeur/hauteur */
+/* src/App.css */
+
+/* Styles généraux pour le body et le conteneur principal */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #282c34;
+  color: #abb2bf;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Styles pour le header : NE PAS METTRE DE POSITION ICI pour éviter les conflits */
+/* Les styles de positionnement et de taille du header doivent être dans Header.css */
+.app-header {
+  background-color: #20232a;
+  padding: 15px 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  /* display: flex; /* Cette propriété est mieux gérée par Header.css pour la nav interne */
+  /* justify-content: center; */
+  /* align-items: center; */
+  /* position: sticky;  <--- SUPPRIMEZ CECI */
+  /* top: 0; */
+  /* z-index: 1000; */
+
+}
+
+/* Styles pour le contenu principal */
+main {
+  flex-grow: 1;
+  display: flex; /* Gardez ceci pour gérer l'alignement vertical du contenu */
   width: 100%;
 }
 
-body {
-  padding-top: 80px; /* Conserver le padding pour le header fixe */
-  font-family: sans-serif; /* Exemple de police de base */
+/* Styles pour la page d'accueil (centrée verticalement) */
+.main-content-centered {
+  align-items: center;
+  justify-content: center;
+  /* Le padding-top doit compenser la hauteur du header si celui-ci est fixed */
+  padding-top: calc(var(--header-height, 60px) + 20px); /* Utilisons une variable CSS pour plus de robustesse */
+  padding-bottom: 20px;
 }
 
-/* Autres styles globaux si vous en avez */
+/* Styles pour les autres pages (alignées en haut, sous le header) */
+.main-content-top {
+  align-items: flex-start;
+  /* Le padding-top doit compenser la hauteur du header si celui-ci est fixed */
+  padding-top: calc(var(--header-height, 60px) + 20px); /* Utilisons une variable CSS pour plus de robustesse */
+  padding-bottom: 20px;
+}

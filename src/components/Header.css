@@ -1,3 +1,4 @@
+/* src/components/Header.css */
 .app-header {
   position: fixed;
   top: 0;
@@ -5,56 +6,58 @@
   width: 100%;
   z-index: 1000;
   background-color: #282c34;
-  padding-top: 20px;
-  padding-bottom: 20px;
+  
+  /* Réduire les paddings verticaux */
+  padding-top: 10px;    /* Réduit de 20px à 10px */
+  padding-bottom: 10px; /* Réduit de 20px à 10px */
+  
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  /* Recalculer la variable --header-height */
+  /* Supposons une hauteur de ligne de texte de 20px (pour un font-size: 1.2em typique) */
+  /* 10px (top padding) + 10px (bottom padding) + 20px (hauteur du contenu) = 40px */
+  --header-height: 40px; /* Ajustez cette valeur si la hauteur réelle est différente */
 }
 
+/* Le reste du CSS du header reste inchangé */
 .app-header nav {
   display: flex;
-  justify-content: space-between; /* Espace les deux <ul> principaux (gauche/droite) */
-  align-items: center; /* Centre verticalement les <ul> dans la nav */
+  justify-content: space-between;
+  align-items: center;
   max-width: 1200px;
   margin: 0 auto;
   padding-left: 20px;
   padding-right: 20px;
-  flex-wrap: wrap; /* Permet aux deux <ul> de passer à la ligne */
-  gap: 15px; /* Espacement entre les <ul> lorsqu'ils wrappent */
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
-/* Styles par défaut pour toutes les listes de navigation */
 .app-header nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
-  flex-wrap: wrap; /* Permet aux <li> de passer à la ligne à l'intérieur de l'<ul> */
-  gap: 10px; /* Espacement entre les <li> */
-
-  flex-grow: 1; /* Permet aux <ul> de prendre l'espace disponible */
-  flex-shrink: 1; /* Permet aux <ul> de rétrécir */
-  min-width: fit-content; /* L'UL ne rétrécit pas en dessous de son contenu */
+  flex-wrap: wrap;
+  column-gap: 25px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: fit-content;
 }
 
-/* --- NOUVEAUTÉS ICI --- */
-/* Alignement spécifique pour le groupe de gauche */
 .app-header nav ul.nav-left {
-  justify-content: flex-start; /* Aligne les <li> à gauche */
+  justify-content: flex-start;
 }
 
-/* Alignement spécifique pour le groupe de droite */
 .app-header nav ul.nav-right {
-  justify-content: flex-end; /* Aligne les <li> à droite */
+  justify-content: flex-end;
 }
-/* --- FIN NOUVEAUTÉS --- */
-
 
 .app-header nav ul li a {
   color: white;
   text-decoration: none;
-  font-size: 1.2em;
-  white-space: nowrap; /* Empêche le texte des liens de se couper */
+  font-size: 1.2em; /* La taille de police est ici */
+  white-space: nowrap;
   transition: color 0.3s ease;
 }
 
