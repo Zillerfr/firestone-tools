@@ -1,5 +1,5 @@
 // Importez BrowserRouter, Routes, Route
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // <--- Ajoutez Navigate
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'; // <--- Ajoutez Navigate
 import Header from './components/Header';
 import Home from './pages/Home';
 import GuildManagement from './pages/GuildManagement';
