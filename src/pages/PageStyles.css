@@ -6,21 +6,17 @@
   padding-bottom: 20px;
 
   /* Ajoutez un padding horizontal pour les marges de sécurité sur les côtés */
-  /* J'ai mis 30px comme exemple, ajustez selon votre préférence */
   padding-left: 30px;
   padding-right: 30px;
-
-  /* SUPPRIMEZ LES LIGNES SUIVANTES pour permettre au contenu de prendre toute la largeur */
-  /* max-width: 960px; */
-  /* margin: 0 auto; */
 
   color: white; /* Couleur du texte par défaut */
   width: 100%; /* Assurez-vous qu'il prenne 100% de la largeur disponible */
   box-sizing: border-box; /* IMPORTANT : Inclut les paddings dans la largeur totale */
 }
 
-/* Les styles existants pour .guild-header-row, .guild-title, .delete-guild-button restent inchangés */
-.guild-header-row {
+/* Styles génériques pour l'en-tête de la page de gestion */
+/* Ces styles s'appliqueront maintenant à la fois aux guildes et aux confréries */
+.entity-header-row { /* Ancien .guild-header-row */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -31,14 +27,14 @@
   gap: 15px;
 }
 
-.guild-title {
+.entity-title { /* Ancien .guild-title */
   margin: 0;
   font-size: 2em;
   color: #61dafb;
   word-break: break-word;
 }
 
-.delete-guild-button {
+.delete-entity-button { /* Ancien .delete-guild-button */
   background-color: #f44336;
   color: white;
   padding: 10px 20px;
@@ -51,12 +47,12 @@
   flex-shrink: 0;
 }
 
-.delete-guild-button:hover {
+.delete-entity-button:hover {
   background-color: #d32f2f;
   transform: translateY(-2px);
 }
 
-.delete-guild-button:active {
+.delete-entity-button:active {
   transform: translateY(0);
 }
 

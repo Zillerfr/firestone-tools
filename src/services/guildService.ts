@@ -1,5 +1,6 @@
 // src/services/guildService.ts
-import type { Guild, Player } from '../types/data';
+import type { Guild } from '../types/data'; // Supprimer 'Player' et 'Fellowship' car elles ne sont plus nécessaires directement ici
+import { playerService } from './playerService'; // Import pour gérer la suppression des affiliations des joueurs
 
 const GUILDS_STORAGE_KEY = 'firestone_tools.guilds';
 
@@ -40,12 +41,11 @@ class GuildService {
    * @param newGuildData Les données de la nouvelle guilde (sans ID).
    * @returns Une promesse résolue avec la Guilde créée (avec ID).
    */
-  async createGuild(newGuildData: Omit<Guild, 'id' | 'players'>): Promise<Guild> {
+  async createGuild(newGuildData: Omit<Guild, 'id'>): Promise<Guild> {
     const guilds = await this.getAllGuilds();
     const newGuild: Guild = {
       ...newGuildData,
       id: crypto.randomUUID(), // Génère un ID unique
-      players: [], // Nouvelle guilde commence sans joueurs
     };
     guilds.push(newGuild);
     await this._saveGuilds(guilds);
@@ -79,83 +79,17 @@ class GuildService {
     let guilds = await this.getAllGuilds();
     const initialLength = guilds.length;
     guilds = guilds.filter((guild) => guild.id !== id);
-    await this._saveGuilds(guilds);
-    return guilds.length < initialLength; // True si une guilde a été supprimée
-  }
-
-  /**
-   * Ajoute un joueur à une guilde.
-   * @param guildId L'ID de la guilde.
-   * @param player Data du nouveau joueur (sans ID).
-   * @returns Promesse résolue avec le joueur ajouté, ou undefined si la guilde n'existe pas.
-   */
-  async addPlayerToGuild(guildId: string, newPlayerData: Omit<Player, 'id'>): Promise<Player | undefined> {
-    const guilds = await this.getAllGuilds();
-    const guildIndex = guilds.findIndex((g) => g.id === guildId);
-
-    if (guildIndex !== -1) {
-      const newPlayer: Player = {
-        ...newPlayerData,
-        id: crypto.randomUUID(),
-      };
-      guilds[guildIndex].players.push(newPlayer);
+    if (guilds.length < initialLength) {
       await this._saveGuilds(guilds);
-      return newPlayer;
+      // IMPORTRANT : Réinitialiser l'ID de guilde pour tous les joueurs qui appartenaient à cette guilde.
+      await playerService.resetGuildAffiliations(id);
+      return true; // Guilde supprimée
     }
-    return undefined; // Guilde non trouvée
+    return false; // Guilde non trouvée
   }
 
-  /**
-   * Met à jour un joueur dans une guilde.
-   * @param guildId L'ID de la guilde.
-   * @param playerId L'ID du joueur à mettre à jour.
-   * @param updatedData Les données partielles à mettre à jour.
-   * @returns Promesse résolue avec le joueur mis à jour, ou undefined.
-   */
-  async updatePlayerInGuild(
-    guildId: string,
-    playerId: string,
-    updatedData: Partial<Player>
-  ): Promise<Player | undefined> {
-
-    const guilds = await this.getAllGuilds();
-    const guildIndex = guilds.findIndex((g) => g.id === guildId);
-
-    if (guildIndex !== -1) {
-      const playerIndex = guilds[guildIndex].players.findIndex((p) => p.id === playerId);
-      if (playerIndex !== -1) {
-        guilds[guildIndex].players[playerIndex] = {
-          ...guilds[guildIndex].players[playerIndex],
-          ...updatedData,
-        };
-        await this._saveGuilds(guilds);
-        return guilds[guildIndex].players[playerIndex];
-      }
-    }
-    return undefined; // Guilde ou joueur non trouvé
-  }
-
-  /**
-   * Supprime un joueur d'une guilde.
-   * @param guildId L'ID de la guilde.
-   * @param playerId L'ID du joueur à supprimer.
-   * @returns Promesse résolue avec true si supprimé, false sinon.
-   */
-  async deletePlayerFromGuild(guildId: string, playerId: string): Promise<boolean> {
-
-    const guilds = await this.getAllGuilds();
-    const guildIndex = guilds.findIndex((g) => g.id === guildId);
-
-    if (guildIndex !== -1) {
-      const initialPlayerCount = guilds[guildIndex].players.length;
-      guilds[guildIndex].players = guilds[guildIndex].players.filter((p) => p.id !== playerId);
-      if (guilds[guildIndex].players.length < initialPlayerCount) {
-        await this._saveGuilds(guilds);
-        return true; // Joueur supprimé
-      }
-    }
-    return false; // Guilde ou joueur non trouvé
-  }
+  // Les méthodes addPlayerIdToGuild et removePlayerIdFromGuild ont été supprimées
+  // car l'appartenance du joueur est gérée directement sur l'objet Player.
 }
 
 // Exportez une instance unique du service

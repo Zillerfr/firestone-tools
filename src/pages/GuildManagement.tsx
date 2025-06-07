@@ -77,11 +77,11 @@ const GuildManagement: React.FC = () => {
       {guildId && guildName ? (
         <>
           {/* Nouvelle section pour le titre et le bouton de suppression */}
-          <div className="guild-header-row">
-            <h2 className="guild-title">Gestion de la guilde **{guildName}**</h2>
+          <div className="entity-header-row">
+            <h2 className="entity-title">Gestion de la guilde : {guildName}</h2>
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              className="delete-guild-button" // Nouvelle classe CSS pour le bouton
+              className="delete-entity-button" // Nouvelle classe CSS pour le bouton
             >
               Supprimer la Guilde
             </button>
