@@ -1,11 +1,19 @@
 // src/services/playerService.ts
-import type { Player } from '../types/data';
+// src/services/playerService.ts
+import type { Player } from '../types/data'; // Assurez-vous que l'interface Player est bien importée
+ // Assurez-vous que l'interface Player est bien importée
+
+// Utilisation de crypto.randomUUID() pour générer des IDs uniques
+// Assurez-vous que cette fonction est disponible dans votre environnement (navigateurs modernes)
+// Si vous ciblez des environnements plus anciens, vous devrez peut-être utiliser une bibliothèque comme 'uuid'
+// comme vous l'aviez fait précédemment (import { v4 as uuidv4 } from 'uuid';)
+// Pour la conformité avec l'exemple fourni, nous allons utiliser crypto.randomUUID().
 
 const PLAYERS_STORAGE_KEY = 'firestone_tools.players';
 
 class PlayerService {
   /**
-   * Charge tous les joueurs enregistrés depuis le localStorage.
+   * Charge tous les joueurs depuis le localStorage.
    * @returns Une promesse résolue avec un tableau de Joueurs.
    */
   async getAllPlayers(): Promise<Player[]> {
@@ -37,7 +45,7 @@ class PlayerService {
 
   /**
    * Crée un nouveau joueur.
-   * @param newPlayerData Les données du nouveau joueur (sans ID, mais peut inclure guildId/fellowshipId).
+   * @param newPlayerData Les données du nouveau joueur (sans ID).
    * @returns Une promesse résolue avec le Joueur créé (avec ID).
    */
   async createPlayer(newPlayerData: Omit<Player, 'id'>): Promise<Player> {
@@ -45,9 +53,6 @@ class PlayerService {
     const newPlayer: Player = {
       ...newPlayerData,
       id: crypto.randomUUID(), // Génère un ID unique
-      // S'assurer que guildId/fellowshipId sont bien initialisés même s'ils sont absents de newPlayerData
-      guildId: newPlayerData.guildId === undefined ? null : newPlayerData.guildId,
-      fellowshipId: newPlayerData.fellowshipId === undefined ? null : newPlayerData.fellowshipId,
     };
     players.push(newPlayer);
     await this._savePlayers(players);
@@ -57,7 +62,7 @@ class PlayerService {
   /**
    * Met à jour un joueur existant.
    * @param id L'ID du joueur à mettre à jour.
-   * @param updatedData Les données partielles à mettre à jour (peut inclure guildId/fellowshipId).
+   * @param updatedData Les données partielles à mettre à jour.
    * @returns Une promesse résolue avec le Joueur mis à jour, ou undefined si non trouvé.
    */
   async updatePlayer(id: string, updatedData: Partial<Player>): Promise<Player | undefined> {
@@ -81,48 +86,46 @@ class PlayerService {
     let players = await this.getAllPlayers();
     const initialLength = players.length;
     players = players.filter((player) => player.id !== id);
-    await this._savePlayers(players);
-    return players.length < initialLength; // True si un joueur a été supprimé
+    if (players.length < initialLength) {
+      await this._savePlayers(players);
+      return true; // Joueur supprimé
+    }
+    return false; // Joueur non trouvé
   }
 
   /**
-   * Réinitialise les affiliations de guilde pour les joueurs d'une guilde supprimée.
-   * @param guildId L'ID de la guilde supprimée.
+   * Réinitialise l'affiliation à une guilde spécifique pour tous les joueurs.
+   * Utile lors de la suppression d'une guilde.
+   * @param guildId L'ID de la guilde dont l'affiliation doit être retirée.
    */
   async resetGuildAffiliations(guildId: string): Promise<void> {
     let players = await this.getAllPlayers();
-    let changed = false;
-    players = players.map(player => {
-        if (player.guildId === guildId) {
-            changed = true;
-            return { ...player, guildId: null };
-        }
-        return player;
-    });
-    if (changed) {
-        await this._savePlayers(players);
+    const playersToUpdate = players.filter(player => player.guildId === guildId);
+
+    if (playersToUpdate.length > 0) {
+      players = players.map(player =>
+        player.guildId === guildId ? { ...player, guildId: null } : player
+      );
+      await this._savePlayers(players);
     }
   }
 
   /**
-   * Réinitialise les affiliations de confrérie pour les joueurs d'une confrérie supprimée.
-   * @param fellowshipId L'ID de la confrérie supprimée.
+   * Réinitialise l'affiliation à une confrérie spécifique pour tous les joueurs.
+   * Utile lors de la suppression d'une confrérie.
+   * @param fellowshipId L'ID de la confrérie dont l'affiliation doit être retirée.
    */
   async resetFellowshipAffiliations(fellowshipId: string): Promise<void> {
     let players = await this.getAllPlayers();
-    let changed = false;
-    players = players.map(player => {
-        if (player.fellowshipId === fellowshipId) {
-            changed = true;
-            return { ...player, fellowshipId: null };
-        }
-        return player;
-    });
-    if (changed) {
-        await this._savePlayers(players);
+    const playersToUpdate = players.filter(player => player.fellowshipId === fellowshipId);
+
+    if (playersToUpdate.length > 0) {
+      players = players.map(player =>
+        player.fellowshipId === fellowshipId ? { ...player, fellowshipId: null } : player
+      );
+      await this._savePlayers(players);
     }
   }
-
 }
 
 // Exportez une instance unique du service

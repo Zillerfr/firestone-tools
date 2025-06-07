@@ -6,61 +6,82 @@
   width: 100%;
   z-index: 1000;
   background-color: #282c34;
-  
+
   /* Réduire les paddings verticaux */
-  padding-top: 10px;    /* Réduit de 20px à 10px */
-  padding-bottom: 10px; /* Réduit de 20px à 10px */
-  
+  padding-top: 10px;
+  padding-bottom: 10px;
+
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 
   /* Recalculer la variable --header-height */
-  /* Supposons une hauteur de ligne de texte de 20px (pour un font-size: 1.2em typique) */
-  /* 10px (top padding) + 10px (bottom padding) + 20px (hauteur du contenu) = 40px */
-  --header-height: 40px; /* Ajustez cette valeur si la hauteur réelle est différente */
+  --header-height: 40px;
 }
 
-/* Le reste du CSS du header reste inchangé */
 .app-header nav {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Pour pousser les ULs aux extrémités */
   align-items: center;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
+  /* Ces paddings doivent définir l'espace interne du nav */
   padding-left: 20px;
-  padding-right: 20px;
-  flex-wrap: wrap;
-  gap: 15px;
+  padding-right: 40px;
+  flex-wrap: wrap; /* Permet aux éléments de passer à la ligne */
+  gap: 15px; /* Espace entre les éléments flex (les ULs) */
+  /* align-content: flex-start; /* Utile si plusieurs lignes pour les aligner au début */
 }
 
 .app-header nav ul {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0; /* Important: pas de marges automatiques ici */
   display: flex;
-  flex-wrap: wrap;
-  column-gap: 25px;
-  flex-grow: 1;
-  flex-shrink: 1;
-  min-width: fit-content;
+  flex-wrap: wrap; /* Pour que les li puissent envelopper */
+  column-gap: 25px; /* Espace entre les li */
+  /* Important: Ne pas laisser flex-grow par défaut à 1,
+     et s'assurer que flex-basis ne force pas un débordement. */
+  flex-grow: 0; /* L'UL ne prend que l'espace nécessaire */
+  flex-shrink: 1; /* L'UL peut rétrécir si nécessaire */
+  /* min-width: fit-content; peut parfois contribuer au débordement.
+     On va le laisser pour l'instant car il est généralement utile,
+     mais gardez-le à l'esprit si le problème persiste. */
 }
 
+/* Ces classes ne sont plus strictement nécessaires pour le positionnement gauche/droite
+   grâce à justify-content: space-between sur le parent `nav`.
+   Cependant, on peut les garder pour la sémantique si vous en avez besoin pour d'autres styles.
+   Assurons-nous qu'elles ne causent pas de conflit.
+*/
 .app-header nav ul.nav-left {
-  justify-content: flex-start;
+  /* Pas de margin-right: auto ici, car justify-content: space-between gère la distribution */
 }
 
 .app-header nav ul.nav-right {
-  justify-content: flex-end;
+  /* Pas de margin-left: auto ici, pour la même raison */
 }
 
 .app-header nav ul li a {
   color: white;
   text-decoration: none;
-  font-size: 1.2em; /* La taille de police est ici */
-  white-space: nowrap;
+  font-size: 1.2em;
+  white-space: nowrap; /* Empêche les liens de se couper */
   transition: color 0.3s ease;
 }
 
 .app-header nav ul li a:hover {
   color: #61dafb;
 }
+
+/*
+@media (max-width: 768px) {
+  .app-header nav {
+    flex-direction: column; // Empile les ULs verticalement
+    align-items: flex-start; // Aligne les ULs à gauche dans la colonne
+  }
+  .app-header nav ul {
+    width: 100%; // Les ULs prennent toute la largeur disponible
+    justify-content: center; // Centre les liens à l'intérieur de chaque UL
+  }
+}
+*/

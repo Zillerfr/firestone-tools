@@ -2,8 +2,11 @@
 
 .home-container {
   text-align: center;
-  margin-top: 50px;
   padding: 0 20px;
+}
+
+.home-container > h1 {
+  margin: 0;
 }
 
 .home-logo {
@@ -12,7 +15,7 @@
   height: auto;
   max-height: 320px;
   min-height: 100px;
-  margin-bottom: 20px;
+  margin: 20px;
 }
 
 /* --- Nouvelles règles et modifications pour les sections de sélection --- */

@@ -1,50 +1,54 @@
+// src/pages/Home.tsx
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import AureliaFairy from '../assets/img/AureliaFairy.webp';
 import './Home.css';
 import { guildService } from '../services/guildService';
-import { fellowshipService } from '../services/fellowshipService'; // Import du service de confrérie
-import type { Guild, Fellowship } from '../types/data'; // Import de Fellowship
+import { fellowshipService } from '../services/fellowshipService';
+import { playerService } from '../services/playerService';
+import type { Guild, Fellowship, Player } from '../types/data'; // Player type is important here
 import GuildCreationModal from '../components/GuildCreationModal';
-import FellowshipCreationModal from '../components/FellowshipCreationModal'; // Import de la nouvelle modale
+import FellowshipCreationModal from '../components/FellowshipCreationModal';
+import PlayerCreationModal from '../components/PlayerCreationModal';
 import { GuildContext } from '../contexts/GuildContext';
-import { FellowshipContext } from '../contexts/FellowshipContext'; // Import du contexte de confrérie
+import { FellowshipContext } from '../contexts/FellowshipContext';
+import { PlayerContext } from '../contexts/PlayerContext';
 
 const Home: React.FC = () => {
   const { selectedGuildId, setSelectedGuildId } = useContext(GuildContext);
-  const { selectedFellowshipId, setSelectedFellowshipId } = useContext(FellowshipContext); // Utilisez le contexte de confrérie
+  const { selectedFellowshipId, setSelectedFellowshipId } = useContext(FellowshipContext);
+  const { selectedPlayerId, setSelectedPlayerId } = useContext(PlayerContext);
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
-  const [fellowships, setFellowships] = useState<Fellowship[]>([]); // Nouvel état pour les confréries
+  const [fellowships, setFellowships] = useState<Fellowship[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [isGuildCreationModalOpen, setIsGuildCreationModalOpen] = useState<boolean>(false); // Renommé pour clarté
-  const [isFellowshipCreationModalOpen, setIsFellowshipCreationModalOpen] = useState<boolean>(false); // Nouvel état pour la modale de confrérie
+  const [isGuildCreationModalOpen, setIsGuildCreationModalOpen] = useState<boolean>(false);
+  const [isFellowshipCreationModalOpen, setIsFellowshipCreationModalOpen] = useState<boolean>(false);
+  const [isPlayerCreationModalOpen, setIsPlayerCreationModalOpen] = useState<boolean>(false);
 
-  // Fonction pour charger les guildes ET les confréries
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null); // Réinitialiser les erreurs
+      setError(null);
 
-      // Chargement des guildes
       const fetchedGuilds = await guildService.getAllGuilds();
       setGuilds(fetchedGuilds);
       if (selectedGuildId && !fetchedGuilds.some(g => g.id === selectedGuildId)) {
-        setSelectedGuildId(null); // Désélectionne si la guilde n'existe plus
-      } else if (!selectedGuildId && fetchedGuilds.length > 0) {
-        // Optionnel : Vous pourriez auto-sélectionner la première guilde si aucune n'est choisie
-        // setSelectedGuildId(fetchedGuilds[0].id);
+        setSelectedGuildId(null);
       }
 
-      // Chargement des confréries
       const fetchedFellowships = await fellowshipService.getAllFellowships();
       setFellowships(fetchedFellowships);
       if (selectedFellowshipId && !fetchedFellowships.some(f => f.id === selectedFellowshipId)) {
-        setSelectedFellowshipId(null); // Désélectionne si la confrérie n'existe plus
-      } else if (!selectedFellowshipId && fetchedFellowships.length > 0) {
-        // Optionnel : Vous pourriez auto-sélectionner la première confrérie si aucune n'est choisie
-        // setSelectedFellowshipId(fetchedFellowships[0].id);
+        setSelectedFellowshipId(null);
+      }
+
+      const fetchedPlayers = await playerService.getAllPlayers();
+      setPlayers(fetchedPlayers);
+      if (selectedPlayerId && !fetchedPlayers.some(p => p.id === selectedPlayerId)) {
+        setSelectedPlayerId(null);
       }
 
     } catch (err) {
@@ -53,38 +57,50 @@ const Home: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedGuildId, setSelectedGuildId, selectedFellowshipId, setSelectedFellowshipId]); // Dépend de tous les IDs et setters des contextes
+  }, [selectedGuildId, setSelectedGuildId, selectedFellowshipId, setSelectedFellowshipId, selectedPlayerId, setSelectedPlayerId]);
 
-  // Effet pour charger les données au montage
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Gérer la création d'une nouvelle guilde
   const handleCreateGuild = async (guildName: string) => {
     try {
       const newGuild = await guildService.createGuild({ name: guildName });
       console.log('Nouvelle guilde créée:', newGuild);
-      setIsGuildCreationModalOpen(false); // Ferme la popin
-      await loadData(); // Recharge toutes les données (guildes et confréries)
-      setSelectedGuildId(newGuild.id); // Sélectionne la nouvelle guilde
+      setIsGuildCreationModalOpen(false);
+      await loadData();
+      setSelectedGuildId(newGuild.id);
     } catch (err) {
       console.error('Erreur lors de la création de la guilde:', err);
       setError('Impossible de créer la guilde.');
     }
   };
 
-  // Gérer la création d'une nouvelle confrérie
   const handleCreateFellowship = async (fellowshipName: string) => {
     try {
       const newFellowship = await fellowshipService.createFellowship({ name: fellowshipName });
       console.log('Nouvelle confrérie créée:', newFellowship);
-      setIsFellowshipCreationModalOpen(false); // Ferme la popin
-      await loadData(); // Recharge toutes les données
-      setSelectedFellowshipId(newFellowship.id); // Sélectionne la nouvelle confrérie
+      setIsFellowshipCreationModalOpen(false);
+      await loadData();
+      setSelectedFellowshipId(newFellowship.id);
     } catch (err) {
       console.error('Erreur lors de la création de la confrérie:', err);
       setError('Impossible de créer la confrérie.');
+    }
+  };
+
+  // CORRECTED: handleCreatePlayer now expects the full player data (excluding ID)
+  const handleCreatePlayer = async (playerData: Omit<Player, 'id'>) => {
+    try {
+      // The playerData already contains guildId and fellowshipId as selected in the modal
+      const newPlayer = await playerService.createPlayer(playerData);
+      console.log('Nouveau joueur créé:', newPlayer);
+      setIsPlayerCreationModalOpen(false);
+      await loadData();
+      setSelectedPlayerId(newPlayer.id);
+    } catch (err) {
+      console.error('Erreur lors de la création du joueur:', err);
+      setError('Impossible de créer le joueur.');
     }
   };
 
@@ -93,22 +109,22 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-container">
+      <h1>Gestion de Guilde/Confrérie<br/>Firestone Idle RPG</h1>
       <img
         src={AureliaFairy}
         alt="Aurelia Fairy"
         className="home-logo"
       />
-      <h1>Outils pour Firestone Idle RPG</h1>
 
       {/* Section de sélection de Guilde */}
-      <div className="selection-section"> {/* Utiliser une classe générique pour les sections de sélection */}
+      <div className="selection-section">
         <label htmlFor="guild-select">Sélectionner une Guilde : </label>
         <select
           id="guild-select"
           value={selectedGuildId || ''}
           onChange={(e) => setSelectedGuildId(e.target.value || null)}
-          disabled={guilds.length === 0 && !selectedGuildId} // Désactiver si aucune guilde et rien de sélectionné
-          className="select-dropdown" // Ajoutez une classe pour le style
+          disabled={guilds.length === 0 && !selectedGuildId}
+          className="select-dropdown"
         >
           {guilds.length === 0 ? (
             <option value="">Aucune guilde disponible</option>
@@ -121,19 +137,19 @@ const Home: React.FC = () => {
             </option>
           ))}
         </select>
-        <button onClick={() => setIsGuildCreationModalOpen(true)} className="add-button"> {/* Utilisez une classe générique */}
+        <button onClick={() => setIsGuildCreationModalOpen(true)} className="add-button">
           Ajouter une Guilde
         </button>
       </div>
 
-      {/* Nouvelle Section de sélection de Confrérie */}
+      {/* Section de sélection de Confrérie */}
       <div className="selection-section">
         <label htmlFor="fellowship-select">Sélectionner une Confrérie : </label>
         <select
           id="fellowship-select"
           value={selectedFellowshipId || ''}
           onChange={(e) => setSelectedFellowshipId(e.target.value || null)}
-          disabled={fellowships.length === 0 && !selectedFellowshipId} // Désactiver si aucune confrérie et rien de sélectionné
+          disabled={fellowships.length === 0 && !selectedFellowshipId}
           className="select-dropdown"
         >
           {fellowships.length === 0 ? (
@@ -152,6 +168,32 @@ const Home: React.FC = () => {
         </button>
       </div>
 
+      {/* Nouvelle Section de sélection de Joueur */}
+      <div className="selection-section">
+        <label htmlFor="player-select">Sélectionner un Joueur : </label>
+        <select
+          id="player-select"
+          value={selectedPlayerId || ''}
+          onChange={(e) => setSelectedPlayerId(e.target.value || null)}
+          disabled={players.length === 0 && !selectedPlayerId}
+          className="select-dropdown"
+        >
+          {players.length === 0 ? (
+            <option value="">Aucun joueur disponible</option>
+          ) : (
+            <option value="">-- Sélectionnez un joueur --</option>
+          )}
+          {players.map((player) => (
+            <option key={player.id} value={player.id}>
+              {player.name}
+            </option>
+          ))}
+        </select>
+        <button onClick={() => setIsPlayerCreationModalOpen(true)} className="add-button">
+          Ajouter un Joueur
+        </button>
+      </div>
+
       {/* Popin de création de guilde */}
       <GuildCreationModal
         isOpen={isGuildCreationModalOpen}
@@ -159,11 +201,18 @@ const Home: React.FC = () => {
         onCreate={handleCreateGuild}
       />
 
-      {/* Nouvelle Popin de création de confrérie */}
+      {/* Popin de création de confrérie */}
       <FellowshipCreationModal
         isOpen={isFellowshipCreationModalOpen}
         onClose={() => setIsFellowshipCreationModalOpen(false)}
         onCreate={handleCreateFellowship}
+      />
+
+      {/* CORRECTED: Nouvelle Popin de création de joueur, passing onCreate handler */}
+      <PlayerCreationModal
+        isOpen={isPlayerCreationModalOpen}
+        onClose={() => setIsPlayerCreationModalOpen(false)}
+        onCreate={handleCreatePlayer}
       />
     </div>
   );

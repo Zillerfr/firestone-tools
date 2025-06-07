@@ -1,149 +1,206 @@
 /* src/components/Modal.css */
 
+/* Styles existants pour le modal-overlay et modal-content */
 .modal-overlay {
-  position: fixed; /* Fixe la modale par rapport à la fenêtre */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Arrière-plan sombre et semi-transparent */
-  display: flex;
-  justify-content: center; /* Centre horizontalement le contenu de la modale */
-  align-items: center; /* Centre verticalement le contenu de la modale */
-  z-index: 2000; /* Assure que la modale est au-dessus de tout le reste */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
 .modal-content {
-  background-color: #333; /* Fond sombre pour la modale */
-  color: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  max-width: 500px; /* Largeur maximale de la modale */
-  width: 90%; /* Prend 90% de la largeur disponible sur les petits écrans */
-  box-sizing: border-box; /* Inclut padding et border dans la largeur */
-  position: relative; /* Pour positionner un bouton de fermeture si besoin */
+    background-color: #36393f; /* Un gris plus foncé pour le fond de la modale */
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    position: relative;
+    max-width: 500px; /* Largeur maximale pour la modale */
+    width: 90%; /* S'adapte à la largeur de l'écran */
+    color: #e0e0e0; /* Texte clair pour le contraste */
+    animation: fadeInScale 0.3s ease-out forwards; /* Animation d'apparition */
+}
+
+/* Animation pour l'apparition de la modale */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 25px;
-  font-size: 1.8em;
-  color: #61dafb;
-}
-
-.form-group {
-  margin-bottom: 20px;
-  text-align: left; /* Aligne le texte du label et l'input à gauche */
-}
-
-.form-group label {
-  display: block; /* Chaque label sur sa propre ligne */
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-
-.form-group input[type="text"] {
-  width: 100%; /* Prend toute la largeur disponible dans le form-group */
-  padding: 12px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  background-color: #444;
-  color: white;
-  font-size: 1em;
-  box-sizing: border-box; /* S'assure que le padding n'augmente pas la largeur */
-}
-
-.form-group input[type="text"]::placeholder {
-  color: #bbb;
-}
-
-.error-message {
-  color: #ff6b6b; /* Rouge pour les messages d'erreur */
-  margin-top: -10px; /* Remonte un peu le message */
-  margin-bottom: 15px;
-  font-size: 0.9em;
-  text-align: left;
+    color: #61dafb; /* Couleur de titre cohérente avec votre thème */
+    margin-top: 0;
+    margin-bottom: 25px;
+    text-align: center;
+    font-size: 1.8em;
+    border-bottom: 2px solid #4a4d52; /* Une légère bordure sous le titre */
+    padding-bottom: 15px;
 }
 
 .modal-actions {
-  display: flex;
-  justify-content: flex-end; /* Aligne les boutons à droite */
-  gap: 15px; /* Espacement entre les boutons */
-  margin-top: 30px;
+    display: flex;
+    justify-content: flex-end; /* Aligner les boutons à droite */
+    gap: 15px; /* Espacement entre les boutons */
+    margin-top: 30px;
 }
 
-.modal-actions button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.3s ease;
+/* Styles de base pour les boutons */
+.button-primary, .button-secondary {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
 }
 
 .button-primary {
-  background-color: #61dafb; /* Couleur principale de React */
-  color: #282c34;
+    background-color: #61dafb;
+    color: #282c34;
+    font-weight: bold;
 }
 
 .button-primary:hover {
-  background-color: #4fa3d1;
+    background-color: #4dc2ea;
+    transform: translateY(-2px);
 }
 
 .button-secondary {
-  background-color: #555;
-  color: white;
+    background-color: #555;
+    color: #e0e0e0;
 }
 
 .button-secondary:hover {
-  background-color: #777;
+    background-color: #666;
+    transform: translateY(-2px);
 }
 
-/* Styles pour la section de sélection de guilde dans Home.css */
-/* Ajoutez ceci à src/pages/Home.css ou un fichier de styles généraux si applicable */
-.guild-selection-section {
-  margin-top: 30px;
-  display: flex;
-  flex-wrap: wrap; /* Permet aux éléments de passer à la ligne sur petit écran */
-  justify-content: center; /* Centre les éléments */
-  align-items: center;
-  gap: 20px; /* Espacement entre label, select et bouton */
+.error-message {
+    color: #ff6b6b; /* Rouge pour les erreurs */
+    background-color: #4a1c1c; /* Fond sombre pour les erreurs */
+    border: 1px solid #ff6b6b;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    text-align: center;
 }
 
-.guild-selection-section label {
-  font-size: 1.1em;
-  color: #61dafb;
+/* Styles pour les groupes de formulaires */
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espace entre le libellé et le champ */
 }
 
-.guild-selection-section select {
-  padding: 10px 15px;
-  border-radius: 5px;
-  border: 1px solid #555;
-  background-color: #444;
-  color: white;
-  font-size: 1em;
-  min-width: 200px; /* Largeur minimale pour la liste déroulante */
-  box-sizing: border-box;
+.form-group label {
+    margin-bottom: 0;
+    font-weight: bold;
+    color: #bbbbbb; /* Style harmonisé pour tous les libellés */
+    flex-shrink: 0;
+    width: 140px; /* Largeur fixe pour les libellés. Ajustez si vos libellés sont plus longs. */
+    text-align: right; /* Aligne le texte du libellé à droite */
 }
 
-.guild-selection-section select:disabled {
-  background-color: #3a3a3a;
-  color: #aaa;
-  cursor: not-allowed;
+/* Styles pour les inputs text et number */
+.form-group input[type="text"],
+.form-group input[type="number"] {
+    flex-grow: 1;
+    width: auto;
+    padding: 8px 12px; /* Hauteur légèrement réduite */
+    border: 1px solid #4a4d52;
+    border-radius: 6px;
+    background-color: #2e3136;
+    color: #e0e0e0;
+    font-size: 1.05em;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.add-guild-button {
-  background-color: #2196F3; /* Bleu */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.3s ease;
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+    border-color: #61dafb;
+    box-shadow: 0 0 0 3px rgba(97, 218, 251, 0.3);
+    outline: none;
 }
 
-.add-guild-button:hover {
-  background-color: #1976D2;
+/* Styles pour les listes déroulantes (select) */
+.form-group select {
+    flex-grow: 1;
+    width: auto;
+    padding: 8px 12px; /* Hauteur légèrement réduite */
+    border: 1px solid #4a4d52;
+    border-radius: 6px;
+    background-color: #2e3136;
+    color: #e0e0e0;
+    font-size: 1.05em;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e0e0e0"%3E%3Cpath d="M7 10l5 5 5-5z"/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1.2em;
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* --- Styles pour la case à cocher "Membre Actif" --- */
+.form-group.checkbox-group {
+    /* Maintenez les styles de base du .form-group parent */
+    /* On retire le 'gap' pour ce groupe spécifique car on gère l'espacement manuellement */
+    gap: 0;
+}
+
+.form-group.checkbox-group label {
+    font-weight: bold;
+    color: #bbbbbb;
+    flex-shrink: 0;
+    width: 140px; /* La même largeur que les autres labels */
+    text-align: right;
+    /* Aucun margin-right: auto ici, car on veut une position fixe pour la checkbox */
+}
+
+.form-group.checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin: 0; /* Réinitialise les marges par défaut */
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #2e3136;
+    border: 1px solid #4a4d52;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    /* Clé de l'alignement : margin-left = largeur du label + gap */
+    margin-left: 15px; /* Cela alignera le début de la checkbox avec le début des autres champs */
+    flex-shrink: 0; /* S'assure que la checkbox ne rétrécit pas */
+}
+
+.form-group.checkbox-group input[type="checkbox"]:checked {
+    background-color: #61dafb;
+    border-color: #61dafb;
+}
+
+.form-group.checkbox-group input[type="checkbox"]:checked::after {
+    content: '✔';
+    font-size: 14px;
+    color: #282c34;
 }

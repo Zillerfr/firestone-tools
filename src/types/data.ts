@@ -8,7 +8,6 @@ export interface Player {
   destiny: number; // 'destin'
   isMember: boolean; // 'membre'
   participation: number; // 'participation' (pourcentage, donc entre 0 et 100)
-  // NOUVELLES PROPRIÉTÉS : ID de la guilde et de la confrérie auxquelles le joueur appartient
   guildId: string | null;     // ID de la guilde, ou null si aucune
   fellowshipId: string | null; // ID de la confrérie, ou null si aucune
 }
