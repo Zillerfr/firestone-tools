@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { guildService } from '../services/guildService';
-import type { Guild } from '../types/data';
 import { GuildContext } from '../contexts/GuildContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 import './PageStyles.css'; // Assurez-vous que ce fichier existe

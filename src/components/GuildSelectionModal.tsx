@@ -1,6 +1,5 @@
 // src/components/GuildSelectionModal.tsx
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { GuildContext } from '../contexts/GuildContext';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { guildService } from '../services/guildService';
 import type { Guild } from '../types/data';
 import '../components/Modal.css';
@@ -12,10 +11,6 @@ interface GuildSelectionModalProps {
 }
 
 const GuildSelectionModal: React.FC<GuildSelectionModalProps> = ({ isOpen, onClose, onGuildSelected }) => {
-  // selectedGuildId et setSelectedGuildId ne sont plus utilisés directement ici pour la logique de sélection
-  // car onGuildSelected est le callback pour la mise à jour globale.
-  // Cependant, les importer peut être utile pour d'autres raisons, comme l'initialisation de la sélection.
-  const { selectedGuildId } = useContext(GuildContext); // On peut encore le lire pour initialiser si besoin
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [error, setError] = useState<string | null>(null);
