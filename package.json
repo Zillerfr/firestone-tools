@@ -5,7 +5,7 @@
   "type": "module",
   "homepage": "https://zillerfr.github.io/firestone-tools/",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --base=/firestone-tools/",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
