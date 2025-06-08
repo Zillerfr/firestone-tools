@@ -6,7 +6,7 @@ import { guildService } from '../services/guildService';
 import { fellowshipService } from '../services/fellowshipService';
 import { PlayerContext } from '../contexts/PlayerContext';
 import ConfirmationModal from '../components/ConfirmationModal';
-import type { Guild, Fellowship } from '../types/data';
+import type { Guild, Fellowship, Player } from '../types/data'; // Importez Player ici
 import './PageStyles.css';
 
 interface PlayerFormState {
@@ -34,9 +34,10 @@ const PlayerManagement: React.FC = () => {
 
   const [warCryString, setWarCryString] = useState<string>('');
   const [destinyString, setDestinyString] = useState<string>('');
-  
+
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [fellowships, setFellowships] = useState<Fellowship[]>([]);
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]); // Nouveau: pour stocker tous les joueurs
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
@@ -47,26 +48,29 @@ const PlayerManagement: React.FC = () => {
     return num.toLocaleString(undefined, { maximumFractionDigits: 0 });
   }, []);
 
-  const loadAssociations = useCallback(async () => {
+  const loadAssociationsAndPlayers = useCallback(async () => {
     try {
       const fetchedGuilds = await guildService.getAllGuilds();
       setGuilds(fetchedGuilds);
 
       const fetchedFellowships = await fellowshipService.getAllFellowships();
       setFellowships(fetchedFellowships);
+
+      const fetchedPlayers = await playerService.getAllPlayers(); // Nouveau: charger tous les joueurs
+      setAllPlayers(fetchedPlayers.sort((a, b) => a.name.localeCompare(b.name))); // Trier par nom
     } catch (err) {
-      console.error('Erreur lors du chargement des guildes/confréries:', err);
-      setError('Impossible de charger les guildes ou confréries.');
+      console.error('Erreur lors du chargement des données:', err);
+      setError('Impossible de charger les guildes, confréries ou joueurs.');
     }
   }, []);
 
   useEffect(() => {
-    const fetchPlayerAndAssociations = async () => {
+    const fetchPlayerDetails = async () => {
       if (playerId) {
         try {
           setLoading(true);
           setError(null);
-          await loadAssociations();
+          await loadAssociationsAndPlayers(); // Charger toutes les associations et joueurs
 
           const player = await playerService.getPlayerById(playerId);
           if (player) {
@@ -97,8 +101,8 @@ const PlayerManagement: React.FC = () => {
         navigate('/');
       }
     };
-    fetchPlayerAndAssociations();
-  }, [playerId, navigate, loadAssociations, formatNumberForDisplay]);
+    fetchPlayerDetails();
+  }, [playerId, navigate, loadAssociationsAndPlayers, formatNumberForDisplay]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -168,6 +172,8 @@ const PlayerManagement: React.FC = () => {
         setIsFormDirty(false);
         setWarCryString(formatNumberForDisplay(updatedPlayer.warCry));
         setDestinyString(formatNumberForDisplay(updatedPlayer.destiny));
+        // Mettre à jour la liste de tous les joueurs si le nom a changé
+        setAllPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
         navigate('/');
       } else {
         setError('Échec de la mise à jour du joueur ou joueur non trouvé.');
@@ -210,6 +216,14 @@ const PlayerManagement: React.FC = () => {
     }
   };
 
+  // Nouveau gestionnaire pour le changement de joueur via la liste déroulante
+  const handlePlayerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPlayerId = e.target.value;
+    if (newPlayerId) {
+      navigate(`/player-management/${newPlayerId}`);
+    }
+  };
+
   if (loading) {
     return <p className="loading-message">Chargement des détails du joueur...</p>;
   }
@@ -225,7 +239,28 @@ const PlayerManagement: React.FC = () => {
   return (
     <div className="page-container">
       <div className="entity-header-row">
-        <h2 className="entity-title">Gestion du joueur : {formData.name || 'Chargement...'}</h2>
+        {/* Remplacer le titre par la liste déroulante */}
+        <h2 className="entity-title">
+          Gestion du joueur :{' '}
+          <select
+            value={playerId || ''}
+            onChange={handlePlayerChange}
+            className="title-select" // Utilisez la même classe CSS que pour la confrérie
+            aria-label="Sélectionner un autre joueur"
+          >
+            {allPlayers.length === 0 ? (
+              <option value="" disabled>Chargement des joueurs...</option>
+            ) : (
+              <>
+                {allPlayers.map((player) => (
+                  <option key={player.id} value={player.id}>
+                    {player.name}
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
+        </h2>
         <button
           onClick={() => setIsDeleteModalOpen(true)}
           className="delete-entity-button"
