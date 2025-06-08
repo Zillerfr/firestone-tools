@@ -14,11 +14,9 @@ export interface Player {
 export interface Guild {
   id: string; // ID unique pour chaque guilde
   name: string;
-  // MODIFIÉ : Suppression de 'playerIds'
 }
 
 export interface Fellowship {
   id: string; // ID unique pour chaque confrérie
   name: string;
-  // MODIFIÉ : Suppression de 'playerIds'
 }

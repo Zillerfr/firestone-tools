@@ -1,59 +1,221 @@
 /* src/pages/PageStyles.css */
 
 .page-container {
-  /* Gardons un padding vertical pour le haut et le bas de la page */
-  padding-top: 20px;
-  padding-bottom: 20px;
+    /* Gardons un padding vertical pour le haut et le bas de la page */
+    padding-top: 20px;
+    padding-bottom: 20px;
 
-  /* Ajoutez un padding horizontal pour les marges de sécurité sur les côtés */
-  padding-left: 30px;
-  padding-right: 30px;
+    /* Ajoutez un padding horizontal pour les marges de sécurité sur les côtés */
+    padding-left: 30px;
+    padding-right: 30px;
 
-  color: white; /* Couleur du texte par défaut */
-  width: 100%; /* Assurez-vous qu'il prenne 100% de la largeur disponible */
-  box-sizing: border-box; /* IMPORTANT : Inclut les paddings dans la largeur totale */
+    color: white; /* Couleur du texte par défaut */
+    width: 100%; /* Assurez-vous qu'il prenne 100% de la largeur disponible */
+    box-sizing: border-box; /* IMPORTANT : Inclut les paddings dans la largeur totale */
 }
 
 /* Styles génériques pour l'en-tête de la page de gestion */
 /* Ces styles s'appliqueront maintenant à la fois aux guildes et aux confréries */
 .entity-header-row { /* Ancien .guild-header-row */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #444;
-  flex-wrap: wrap;
-  gap: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .entity-title { /* Ancien .guild-title */
-  margin: 0;
-  font-size: 2em;
-  color: #61dafb;
-  word-break: break-word;
+    margin: 0;
+    font-size: 2em;
+    color: #61dafb;
+    word-break: break-word;
 }
 
 .delete-entity-button { /* Ancien .delete-guild-button */
-  background-color: #f44336;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  flex-shrink: 0;
+    background-color: #f44336;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    flex-shrink: 0;
 }
 
 .delete-entity-button:hover {
-  background-color: #d32f2f;
-  transform: translateY(-2px);
+    background-color: #d32f2f;
+    transform: translateY(-2px);
 }
 
 .delete-entity-button:active {
-  transform: translateY(0);
+    transform: translateY(0);
 }
 
-/* Ajoutez d'autres styles génériques de page ici si nécessaire */
+/* NOUVEAUX STYLES POUR LE FORMULAIRE DE GESTION DE JOUEUR */
+.player-management-form {
+    /* background-color: #2e3136; */ /* Supprimé pour enlever l'encadré */
+    padding: 0; /* Pas de padding global sur le formulaire lui-même */
+    border-radius: 0; /* Pas de bordure arrondie */
+    box-shadow: none; /* Pas d'ombre */
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 20px;
+}
+
+.form-group {
+    display: flex; /* Utilise flexbox pour aligner label et input */
+    align-items: center; /* Centre verticalement les éléments */
+    gap: 15px; /* Espace entre le label et l'input */
+    flex-wrap: wrap; /* Permet aux éléments de passer à la ligne si l'écran est petit */
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #bbbbbb;
+    font-size: 0.9em;
+    text-align: right; /* Justifie le texte à droite */
+    min-width: 150px; /* Largeur minimale pour les labels pour l'alignement */
+    flex-shrink: 0; /* Empêche le label de rétrécir */
+}
+
+.form-group input[type="text"],
+.form-group select {
+    background-color: #3a3f45;
+    border: 1px solid #4a4d52;
+    color: #f8f8f2;
+    padding: 9px 10px;
+    border-radius: 4px;
+    font-size: 0.95em;
+    flex-grow: 1; /* Permet à l'input/select de prendre l'espace restant */
+    max-width: 400px; /* Limite la largeur maximale du champ de saisie */
+    box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #61dafb;
+    box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
+}
+
+/* Styles pour les options de select */
+.form-group select option {
+    background-color: #3a3f45;
+    color: #f8f8f2;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #4a4d52;
+}
+
+.button-primary {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.button-primary:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.button-primary:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.button-secondary {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.button-secondary:hover {
+    background-color: #0056b3;
+}
+
+.loading-message,
+.error-message,
+.info-message {
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.loading-message {
+    background-color: #3a3f45;
+    color: #61dafb;
+}
+
+.error-message {
+    background-color: #ffcdd2;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+}
+
+.info-message {
+    background-color: #c8e6c9;
+    color: #388e3c;
+    border: 1px solid #388e3c;
+}
+
+/* Media queries pour la réactivité */
+@media (max-width: 768px) {
+    .page-container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .entity-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .delete-entity-button {
+        width: 100%;
+    }
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .form-actions button {
+        width: 100%;
+    }
+    /* Pour les écrans plus petits, permettre au label et à l'input de s'empiler */
+    .form-group {
+        flex-direction: column;
+        align-items: flex-start; /* Aligne le label à gauche en mode colonne */
+        gap: 6px; /* Réduit l'espace */
+    }
+    .form-group label {
+        text-align: left; /* Aligne le label à gauche en mode colonne */
+        min-width: unset; /* Supprime la largeur minimale pour laisser le label respirer */
+    }
+    .form-group input[type="text"],
+    .form-group select {
+        max-width: 100%; /* L'input prend toute la largeur disponible */
+    }
+}

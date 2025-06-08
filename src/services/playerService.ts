@@ -1,12 +1,10 @@
 // src/services/playerService.ts
-// src/services/playerService.ts
 import type { Player } from '../types/data'; // Assurez-vous que l'interface Player est bien importée
- // Assurez-vous que l'interface Player est bien importée
 
 // Utilisation de crypto.randomUUID() pour générer des IDs uniques
 // Assurez-vous que cette fonction est disponible dans votre environnement (navigateurs modernes)
 // Si vous ciblez des environnements plus anciens, vous devrez peut-être utiliser une bibliothèque comme 'uuid'
-// comme vous l'aviez fait précédemment (import { v4 as uuidv4 } from 'uuid';)
+// comme vous l'avez fait précédemment (import { v4 as uuidv4 } from 'uuid';)
 // Pour la conformité avec l'exemple fourni, nous allons utiliser crypto.randomUUID().
 
 const PLAYERS_STORAGE_KEY = 'firestone_tools.players';
@@ -65,7 +63,7 @@ class PlayerService {
    * @param updatedData Les données partielles à mettre à jour.
    * @returns Une promesse résolue avec le Joueur mis à jour, ou undefined si non trouvé.
    */
-  async updatePlayer(id: string, updatedData: Partial<Player>): Promise<Player | undefined> {
+  async updatePlayer(id: string, updatedData: Partial<Omit<Player, 'id'>>): Promise<Player | undefined> {
     let players = await this.getAllPlayers();
     const index = players.findIndex((player) => player.id === id);
 
