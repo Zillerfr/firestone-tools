@@ -205,7 +205,7 @@ const PlayerManagement: React.FC = () => {
         setWarCryString(formatNumberForDisplay(updatedPlayer.warCry));
         setDestinyString(formatNumberForDisplay(updatedPlayer.destiny));
         setParticipationString(formatParticipationForDisplay(updatedPlayer.participation));
-        navigate('/'); // Redirige vers la page d'accueil après sauvegarde
+        // navigate('/'); // We can remove this if we want to stay on the page after save
       } else {
         setError('Échec de la mise à jour du joueur ou joueur non trouvé.');
       }
@@ -234,6 +234,20 @@ const PlayerManagement: React.FC = () => {
       }
     }
   };
+
+  // --- NEW NAVIGATION HANDLERS ---
+  const handleGoToFellowship = () => {
+    if (formData.fellowshipId) {
+      navigate(`/fellowship-management/${formData.fellowshipId}`);
+    }
+  };
+
+  const handleGoToGuild = () => {
+    if (formData.guildId) {
+      navigate(`/guild-management/${formData.guildId}`);
+    }
+  };
+  // --- END NEW NAVIGATION HANDLERS ---
 
   if (loading) {
     return <p className="loading-message">Chargement des détails du joueur...</p>;
@@ -370,6 +384,26 @@ const PlayerManagement: React.FC = () => {
           <button type="submit" className="button-primary" disabled={!isFormDirty}>
             Sauvegarder les modifications
           </button>
+
+          {/* --- NEW BUTTONS HERE --- */}
+          <button
+            type="button"
+            onClick={handleGoToFellowship}
+            className="button-secondary"
+            disabled={!formData.fellowshipId}
+          >
+            Aller à la confrérie
+          </button>
+          <button
+            type="button"
+            onClick={handleGoToGuild}
+            className="button-secondary"
+            disabled={!formData.guildId}
+          >
+            Aller à la guilde
+          </button>
+          {/* --- END NEW BUTTONS --- */}
+
           <button type="button" onClick={() => navigate('/')} className="button-secondary">
             Retour à l'accueil
           </button>
