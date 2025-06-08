@@ -104,7 +104,8 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-container">
-      <h1>Gestion de Guilde/Confrérie<br/>Firestone Idle RPG</h1>
+      <h1 className="home-title">Gestion de Guilde/Confrérie<br/>Firestone Idle RPG</h1>
+      <p className="home-title">v0.8</p>
       <img
         src={AureliaFairy}
         alt="Aurelia Fairy"

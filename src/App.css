@@ -44,8 +44,7 @@ main {
 .main-content-centered {
   align-items: center;
   justify-content: center;
-  /* Le padding-top doit compenser la hauteur du header si celui-ci est fixed */
-  padding-top: calc(var(--header-height, 60px) + 20px); /* Utilisons une variable CSS pour plus de robustesse */
+  padding-top: 20px;
   padding-bottom: 20px;
 }
 
