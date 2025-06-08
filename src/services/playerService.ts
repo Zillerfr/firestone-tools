@@ -1,6 +1,7 @@
 // src/services/playerService.ts
 import type { Player } from '../types/data'; // Assurez-vous que l'interface Player est bien importée
 import { guildService } from './guildService';
+import { fellowshipService } from './fellowshipService';
 
 // Utilisation de crypto.randomUUID() pour générer des IDs uniques
 // Assurez-vous que cette fonction est disponible dans votre environnement (navigateurs modernes)
@@ -62,6 +63,29 @@ class PlayerService {
       .map(player => ({
         ...player,
         guild: player.guildId ? guildMap.get(player.guildId) : undefined, // Ajoute l'objet guilde
+      }));
+  }
+
+   /**
+   * Récupère les joueurs appartenant à une guilde donnée,
+   * en enrichissant chaque joueur avec les données de sa confrérie.
+   * @param guildId L'ID de la guilde.
+   * @returns Une promesse résolue avec un tableau de Joueurs (enrichis avec les données de confrérie).
+   */
+  async getPlayersByGuildId(guildId: string): Promise<Player[]> {
+    // 1. Récupérer tous les joueurs
+    const allPlayers = await this.getAllPlayers();
+
+    // 2. Récupérer toutes les confréries
+    const allFellowships = await fellowshipService.getAllFellowships();
+    const fellowshipMap = new Map(allFellowships.map(fellowship => [fellowship.id, fellowship]));
+
+    // 3. Filtrer les joueurs par guildId et enrichir avec les données de confrérie
+    return allPlayers
+      .filter(player => player.guildId === guildId)
+      .map(player => ({
+        ...player,
+        fellowship: player.fellowshipId ? fellowshipMap.get(player.fellowshipId) : undefined, // Ajoute l'objet confrérie
       }));
   }
 

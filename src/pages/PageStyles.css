@@ -372,6 +372,18 @@
     color: #f8f8f2; /* Texte des options clair */
 }
 
+.clickable-fellowship,
+.clickable-guild {
+    color: var(--color-primary-text); /* Ou une autre couleur qui indique un lien */
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.clickable-fellowship:hover,
+.clickable-guild:hover {
+    color: var(--color-accent); /* Couleur au survol */
+    text-decoration: none;
+}
 
 /* Media queries pour la réactivité */
 @media (max-width: 768px) {

@@ -8,7 +8,8 @@ export interface Player {
   destiny: number;
   guildId: string | null;
   fellowshipId: string | null;
-  guild?: Guild; // Ajouté pour potentiellement embarquer les données de la guilde
+  guild?: Guild | null; // Ajouté pour potentiellement embarquer les données de la guilde
+  fellowship?: Fellowship | null; // Ajouté pour potentiellement embarquer les données de la confrérie
 }
 
 export interface Guild {

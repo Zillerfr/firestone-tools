@@ -174,7 +174,6 @@ const PlayerManagement: React.FC = () => {
         setDestinyString(formatNumberForDisplay(updatedPlayer.destiny));
         // Mettre à jour la liste de tous les joueurs si le nom a changé
         setAllPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
-        navigate('/');
       } else {
         setError('Échec de la mise à jour du joueur ou joueur non trouvé.');
       }
@@ -294,6 +293,7 @@ const PlayerManagement: React.FC = () => {
             onChange={handleChange}
             required
           >
+            <option value="Liste">En liste d'attente</option>
             <option value="Membre">Membre</option>
             <option value="Officier">Officier</option>
             <option value="Chef de guilde">Chef de guilde</option>

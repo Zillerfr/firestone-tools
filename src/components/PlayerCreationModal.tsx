@@ -11,6 +11,8 @@ interface PlayerCreationModalProps {
   onClose: () => void;
   onCreate: (player: Player) => void;
   initialFellowshipId?: string | null;
+  // --- NOUVEAU : Ajout de initialGuildId ---
+  initialGuildId?: string | null;
 }
 
 interface PlayerFormState {
@@ -22,7 +24,7 @@ interface PlayerFormState {
   fellowshipId: string | null;
 }
 
-const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }: PlayerCreationModalProps) => {
+const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, initialGuildId }: PlayerCreationModalProps) => {
   const [formData, setFormData] = useState<PlayerFormState>({
     name: '',
     role: 'Membre',
@@ -42,7 +44,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
 
   const [warCryString, setWarCryString] = useState<string>('0');
   const [destinyString, setDestinyString] = useState<string>('0');
-  
+
   const loadAssociations = useCallback(async () => {
     try {
       const fetchedGuilds = await guildService.getAllGuilds();
@@ -71,7 +73,8 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
         role: 'Membre',
         warCry: 0,
         destiny: 0,
-        guildId: null,
+        // --- MISE À JOUR : Utiliser initialGuildId s'il est fourni ---
+        guildId: initialGuildId || null,
         fellowshipId: initialFellowshipId || null,
       });
 
@@ -83,7 +86,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen, loadAssociations, initialFellowshipId]);
+  }, [isOpen, loadAssociations, initialFellowshipId, initialGuildId]); // Ajoutez initialGuildId aux dépendances
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!modalRef.current) return;
@@ -183,12 +186,14 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
     }
 
     const playerToCreate: Omit<Player, 'id'> = {
-        name: formData.name,
-        role: formData.role,
-        warCry: formData.warCry,
-        destiny: formData.destiny,
-        guildId: formData.guildId,
-        fellowshipId: initialFellowshipId || formData.fellowshipId
+      name: formData.name,
+      role: formData.role,
+      warCry: formData.warCry,
+      destiny: formData.destiny,
+      // --- MISE À JOUR : Prioriser initialGuildId si présent, sinon utiliser formData.guildId ---
+      guildId: initialGuildId || formData.guildId,
+      // --- La logique pour fellowshipId était déjà bonne ici ---
+      fellowshipId: initialFellowshipId || formData.fellowshipId
     };
 
     try {
@@ -249,6 +254,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
               onChange={handleChange}
               required
             >
+              <option value="Liste">En liste d'attente</option>
               <option value="Membre">Membre</option>
               <option value="Officier">Officier</option>
               <option value="Chef de guilde">Chef de guilde</option>
@@ -289,6 +295,8 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
               name="guildId"
               value={formData.guildId || ''}
               onChange={handleChange}
+              // Désactiver si un initialGuildId est fourni
+              disabled={!!initialGuildId}
             >
               <option value="">-- Aucune guilde --</option>
               {guilds.map((guild) => (
@@ -306,6 +314,8 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
               name="fellowshipId"
               value={formData.fellowshipId || ''}
               onChange={handleChange}
+              // Désactiver si un initialFellowshipId est fourni (pour la cohérence)
+              disabled={!!initialFellowshipId}
             >
               <option value="">-- Aucune confrérie --</option>
               {fellowships.map((fellowship) => (
