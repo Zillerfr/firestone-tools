@@ -225,7 +225,6 @@ const GuildManagement: React.FC = () => {
                               className="title-select"
                               aria-label="Sélectionner une autre guilde"
                           >
-                              <option value="">-- Sélectionner une guilde --</option>
                               {allGuilds.map((g) => (
                                   <option key={g.id} value={g.id}>
                                       {g.name}

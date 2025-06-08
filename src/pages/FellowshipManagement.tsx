@@ -210,9 +210,6 @@ const FellowshipManagement: React.FC = () => {
     const newFellowshipId = e.target.value;
     if (newFellowshipId) {
       navigate(`/fellowship-management/${newFellowshipId}`);
-    } else {
-      // Naviguer vers l'URL sans ID si l'option "-- Sélectionner une confrérie --" est choisie
-      navigate('/fellowship-management');
     }
   };
 
@@ -318,8 +315,6 @@ const FellowshipManagement: React.FC = () => {
               className="title-select"
               aria-label="Sélectionner une autre confrérie"
             >
-              {/* Option vide pour permettre la désélection */}
-              <option value="">-- Sélectionner une confrérie --</option>
               {allFellowships.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.name}
