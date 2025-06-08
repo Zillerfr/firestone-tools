@@ -1,0 +1,68 @@
+/* src/components/Footer.css */
+
+.app-footer {
+  /* Reprend la couleur de fond exacte du header */
+  background-color: #20232a; /* <-- C'est la même couleur que votre header maintenant */
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2); /* Ombre inversée pour le footer, même style que le header */
+
+  /* Positionnement fixe en bas, similaire au header en haut */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* Assurez-vous qu'il est au-dessus des autres éléments */
+
+  /* Réduire les paddings verticaux, comme le header */
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+  color: white; /* Couleur de texte blanche, comme les liens du header */
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between; /* Aligner un élément à gauche, un autre à droite */
+  align-items: center;
+  max-width: 100%; /* S'assurer qu'il ne déborde pas */
+  margin: 0 auto; /* Centrer le contenu */
+
+  /* Reprend les paddings latéraux du nav du header */
+  padding-left: 20px;
+  padding-right: 40px;
+
+  flex-wrap: wrap; /* Permet aux éléments de passer à la ligne sur petits écrans */
+  gap: 15px; /* Espace entre les éléments */
+}
+
+.footer-text {
+  font-size: 1em;
+  color: #abb2bf;
+  white-space: nowrap;
+}
+
+.footer-link {
+  color: white;
+  text-decoration: none;
+  font-size: 1.2em;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #61dafb;
+}
+
+/* Media Queries pour la responsivité, similaire au header */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .footer-text, .footer-link {
+    font-size: 1em;
+    margin-bottom: 5px;
+  }
+}

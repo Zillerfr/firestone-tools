@@ -11,6 +11,8 @@ import './App.css';
 import { GuildContext } from './contexts/GuildContext';
 import { FellowshipContext } from './contexts/FellowshipContext';
 import { PlayerContext } from './contexts/PlayerContext'; // <-- Import du nouveau contexte
+import Footer from './components/Footer';
+import DataManagement from './pages/DataManagement';
 
 // Nouveau composant interne pour gérer la classe de main
 const MainContentWrapper: React.FC = () => {
@@ -28,6 +30,7 @@ const MainContentWrapper: React.FC = () => {
         {/* <-- Nouvelle route pour la gestion de joueur */}
         <Route path="/player-management/:playerId" element={<PlayerManagement />} />
         <Route path="/account-management" element={<AccountManagement />} />
+        <Route path="/data-management" element={<DataManagement />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </main>
@@ -48,6 +51,7 @@ const App: React.FC = () => {
           <Router basename="/firestone-tools/">
             <Header />
             <MainContentWrapper />
+            <Footer />
           </Router>
         </PlayerContext.Provider>
       </FellowshipContext.Provider>

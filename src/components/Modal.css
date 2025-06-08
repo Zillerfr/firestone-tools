@@ -101,7 +101,7 @@
 .form-group {
     margin-bottom: 20px;
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 15px; /* Espace entre le libellé et le champ */
 }
 

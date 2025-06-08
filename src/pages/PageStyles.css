@@ -62,55 +62,19 @@
     margin-right: auto;
 }
 
-.form-group {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.form-group label {
-    font-weight: bold;
-    color: #bbbbbb;
-    font-size: 0.9em;
-    text-align: right;
-    min-width: 150px;
-    flex-shrink: 0;
-}
-
-.form-group input[type="text"],
-.form-group select {
-    background-color: #3a3f45;
-    border: 1px solid #4a4d52;
-    color: #f8f8f2;
-    padding: 9px 10px;
-    border-radius: 4px;
-    font-size: 0.95em;
-    flex-grow: 1;
+.player-management-form .form-group input[type="text"],
+.player-management-form .form-group select {
     max-width: 400px;
-    box-sizing: border-box;
 }
 
-.form-group input[type="text"]:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: #61dafb;
-    box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
-}
-
-.form-group select option {
-    background-color: #3a3f45;
-    color: #f8f8f2;
-}
-
-.form-actions {
+.player-management-form .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid #4a4d52;
-}
+} 
 
 .button-primary {
     background-color: #4CAF50;
@@ -334,10 +298,9 @@
 }
 
 /* --- NOUVEAUX STYLES POUR LA LISTE DÉROULANTE DANS LE TITRE --- */
-.title-select {
+.entity-title .title-select {
     background-color: #3a3f45; /* Fond sombre */
     border: 1px solid #4a4d52; /* Bordure subtile */
-    color: #61dafb; /* Couleur du texte, assortie au titre */
     padding: 5px 10px; /* Espacement intérieur */
     border-radius: 5px; /* Bords légèrement arrondis */
     font-size: 0.9em; /* Légèrement plus petit que le titre, mais lisible */
@@ -353,20 +316,22 @@
     max-width: 300px; /* Limite la largeur de la liste déroulante */
     flex-shrink: 1; /* Permet de réduire la taille si l'espace est limité */
     min-width: 150px; /* Empêche de devenir trop petit */
-    box-sizing: border-box; /* S'assure que padding et border sont inclus dans la largeur */
+    min-width: 300px;
+    background-color: #353a45;
+    color: #61dafb;
 }
 
-.title-select:hover {
+.entity-title .title-select:hover {
     border-color: #8be9fd; /* Bordure plus claire au survol */
 }
 
-.title-select:focus {
+.entity-title .title-select:focus {
     outline: none;
     border-color: #8be9fd;
     box-shadow: 0 0 0 3px rgba(97, 218, 251, 0.3); /* Ombre lumineuse au focus */
 }
 
-.title-select option {
+.entity-title .title-select option {
     background-color: #2e3136; /* Fond des options plus sombre */
     color: #f8f8f2; /* Texte des options clair */
 }
@@ -472,7 +437,7 @@
         width: 100%;
     }
 
-    .title-select {
+    .entity-title .title-select {
         width: 100%; /* Prend toute la largeur disponible */
         max-width: 100%; /* S'assure qu'il ne dépasse pas */
         font-size: 0.85em; /* Réduit la taille de la police sur mobile */
