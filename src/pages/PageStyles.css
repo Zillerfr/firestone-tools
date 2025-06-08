@@ -1,8 +1,6 @@
 /* src/pages/PageStyles.css */
 
 .page-container {
-    padding-top: 20px;
-    padding-bottom: 20px;
     padding-left: 30px;
     padding-right: 30px;
     color: white;
@@ -14,7 +12,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid #444;
     flex-wrap: wrap;
@@ -191,7 +188,7 @@
 /* --- STYLES GÉNÉRIQUES POUR LES SECTIONS DE CONTENU (comme les tableaux) --- */
 .content-section {
     width: 100%;
-    margin: 30px auto 20px auto;
+    margin: 0 auto 20px auto;
     background-color: #2e3136;
     padding: 20px;
     border-radius: 8px;
