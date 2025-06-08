@@ -6,7 +6,7 @@ import { playerService } from '../services/playerService';
 import { FellowshipContext } from '../contexts/FellowshipContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 import PlayerCreationModal from '../components/PlayerCreationModal';
-import type { Player, Guild } from '../types/data';
+import type { Player } from '../types/data';
 import './PageStyles.css';
 
 const FellowshipManagement: React.FC = () => {
