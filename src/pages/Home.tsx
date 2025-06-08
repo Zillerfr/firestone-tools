@@ -89,19 +89,14 @@ const Home: React.FC = () => {
     }
   };
 
-  // CORRECTED: handleCreatePlayer now expects the full player data (excluding ID)
-  const handleCreatePlayer = async (playerData: Omit<Player, 'id'>) => {
-    try {
-      // The playerData already contains guildId and fellowshipId as selected in the modal
-      const newPlayer = await playerService.createPlayer(playerData);
-      console.log('Nouveau joueur créé:', newPlayer);
-      setIsPlayerCreationModalOpen(false);
-      await loadData();
-      setSelectedPlayerId(newPlayer.id);
-    } catch (err) {
-      console.error('Erreur lors de la création du joueur:', err);
-      setError('Impossible de créer le joueur.');
-    }
+  // handleCreatePlayer reçoit maintenant le Player complet de la modale,
+  // car la modale a déjà géré la création via playerService.createPlayer.
+  // Cette fonction ne doit plus appeler playerService.createPlayer.
+  const handleCreatePlayer = async (newPlayer: Player) => { // Changez le type de playerData à Player
+    console.log('Nouveau joueur créé par la modale:', newPlayer);
+    setIsPlayerCreationModalOpen(false); // Fermez la modale
+    await loadData(); // Rechargez les données pour inclure le nouveau joueur
+    setSelectedPlayerId(newPlayer.id); // Sélectionnez le nouveau joueur si désiré
   };
 
   if (loading) return <p>Chargement des données...</p>;

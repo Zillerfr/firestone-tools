@@ -71,6 +71,7 @@ class PlayerService {
    * @returns Une promesse résolue avec le Joueur créé (avec ID).
    */
   async createPlayer(newPlayerData: Omit<Player, 'id'>): Promise<Player> {
+    console.log("TEST création de joueur")
     const players = await this.getAllPlayers();
     const newPlayer: Player = {
       ...newPlayerData,

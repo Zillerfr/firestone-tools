@@ -2,13 +2,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { guildService } from '../services/guildService';
 import { fellowshipService } from '../services/fellowshipService';
+import { playerService } from '../services/playerService'; // Importez playerService ici
 import type { Guild, Fellowship, Player } from '../types/data';
 import './Modal.css';
 
 interface PlayerCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (playerData: Omit<Player, 'id'>) => void;
+  // Changez la signature de onCreate: la modale va créer le joueur et renvoyer le joueur AVEC son ID
+  onCreate: (player: Player) => void;
+  // Nouvelle prop pour pré-sélectionner la confrérie
+  initialFellowshipId?: string | null;
 }
 
 interface PlayerFormState {
@@ -21,7 +25,7 @@ interface PlayerFormState {
   fellowshipId: string | null;
 }
 
-const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalProps) => {
+const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }: PlayerCreationModalProps) => {
   const [formData, setFormData] = useState<PlayerFormState>({
     name: '',
     role: 'Membre',
@@ -29,12 +33,13 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
     destiny: 0,
     participation: 0,
     guildId: null,
-    fellowshipId: null,
+    fellowshipId: null, // Sera écrasé par initialFellowshipId si fourni
   });
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [fellowships, setFellowships] = useState<Fellowship[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false); // Ajouter un état de chargement
 
   const modalRef = useRef<HTMLDivElement>(null);
   const firstFocusableElementRef = useRef<HTMLInputElement>(null);
@@ -42,7 +47,6 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
   const [warCryString, setWarCryString] = useState<string>('0');
   const [destinyString, setDestinyString] = useState<string>('0');
   const [participationString, setParticipationString] = useState<string>('0');
-
 
   const loadAssociations = useCallback(async () => {
     try {
@@ -63,7 +67,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
         firstFocusableElementRef.current?.focus();
       }, 0);
       document.body.style.overflow = 'hidden';
-      
+
       // Réinitialiser les états et les valeurs affichées à l'ouverture
       setWarCryString('0');
       setDestinyString('0');
@@ -75,7 +79,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
         destiny: 0,
         participation: 0,
         guildId: null,
-        fellowshipId: null,
+        fellowshipId: initialFellowshipId || null, // Utilise initialFellowshipId ici
       });
 
       setError(null);
@@ -86,7 +90,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen, loadAssociations]);
+  }, [isOpen, loadAssociations, initialFellowshipId]); // Ajout de initialFellowshipId dans les dépendances
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!modalRef.current) return;
@@ -132,106 +136,110 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
     const { name, value } = e.target as HTMLInputElement;
 
     if (['guildId', 'fellowshipId'].includes(name)) {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value === '' ? null : value,
-        }));
+      setFormData(prev => ({
+        ...prev,
+        [name]: value === '' ? null : value,
+      }));
     } else {
-        // Gérer les champs textuels convertis en nombres
-        if (name === 'warCry') {
-            setWarCryString(value); // Stocke la chaîne brute pour l'affichage
-            const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
-            const parsedValue = parseInt(cleanedValue, 10);
-            setFormData(prev => ({
-                ...prev,
-                [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
-            }));
-        } else if (name === 'destiny') {
-            setDestinyString(value); // Stocke la chaîne brute pour l'affichage
-            const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
-            const parsedValue = parseInt(cleanedValue, 10);
-            setFormData(prev => ({
-                ...prev,
-                [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
-            }));
-        } else if (name === 'participation') {
-            let inputVal = value;
-            // Accepter à la fois la virgule et le point comme séparateur décimal
-            inputVal = inputVal.replace(',', '.');
+      // Gérer les champs textuels convertis en nombres
+      if (name === 'warCry') {
+        setWarCryString(value); // Stocke la chaîne brute pour l'affichage
+        const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
+        const parsedValue = parseInt(cleanedValue, 10);
+        setFormData(prev => ({
+          ...prev,
+          [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
+        }));
+      } else if (name === 'destiny') {
+        setDestinyString(value); // Stocke la chaîne brute pour l'affichage
+        const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
+        const parsedValue = parseInt(cleanedValue, 10);
+        setFormData(prev => ({
+          ...prev,
+          [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
+        }));
+      } else if (name === 'participation') {
+        let inputVal = value;
+        inputVal = inputVal.replace(',', '.');
 
-            // Regex pour autoriser des nombres entiers ou avec une seule décimale
-            // Et s'assurer que le nombre est entre 0 et 100
-            const regex = /^\d*(\.\d{0,1})?$/; // Autorise chiffres, ou point et une décimale max
+        const regex = /^\d*(\.\d{0,1})?$/;
 
-            if (inputVal === '' || inputVal === '.') {
-                // Permettre de vider le champ ou de commencer par un point
-                setParticipationString(inputVal);
-                setFormData(prev => ({ ...prev, [name]: 0 }));
-            } else if (regex.test(inputVal)) {
-                let parsedValue = parseFloat(inputVal);
+        if (inputVal === '' || inputVal === '.') {
+          setParticipationString(inputVal);
+          setFormData(prev => ({ ...prev, [name]: 0 }));
+        } else if (regex.test(inputVal)) {
+          let parsedValue = parseFloat(inputVal);
 
-                // Limiter la valeur entre 0 et 100
-                if (parsedValue > 100) {
-                    parsedValue = 100;
-                    setParticipationString('100'); // Mettre à jour la chaîne affichée immédiatement
-                } else if (parsedValue < 0) {
-                    parsedValue = 0;
-                    setParticipationString('0'); // Mettre à jour la chaîne affichée immédiatement
-                } else {
-                    setParticipationString(inputVal); // Stocke la chaîne brute valide pour l'affichage
-                }
-                
-                setFormData(prev => ({
-                    ...prev,
-                    [name]: isNaN(parsedValue) ? 0 : parsedValue,
-                }));
-            }
-            // Si la saisie ne correspond pas à la regex, on ne met pas à jour l'état de la chaîne
-            // ce qui empêche l'utilisateur de taper des caractères invalides ou plus d'une décimale
-            // et maintient la dernière valeur valide affichée.
-        } else {
-            // Pour les autres champs (comme 'name')
-            setFormData(prev => ({
-                ...prev,
-                [name]: value,
-            }));
+          if (parsedValue > 100) {
+            parsedValue = 100;
+            setParticipationString('100');
+          } else if (parsedValue < 0) {
+            parsedValue = 0;
+            setParticipationString('0');
+          } else {
+            setParticipationString(inputVal);
+          }
+
+          setFormData(prev => ({
+            ...prev,
+            [name]: isNaN(parsedValue) ? 0 : parsedValue,
+          }));
         }
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => { // Rendre la fonction async
     e.preventDefault();
+    setLoading(true); // Activer le chargement
+    setError(null);
+
     if (formData.name.trim() === '') {
       setError('Le nom du joueur ne peut pas être vide.');
+      setLoading(false);
       return;
     }
     if (formData.warCry < 0) {
       setError('Cri de guerre doit être un nombre positif ou nul.');
+      setLoading(false);
       return;
     }
     if (formData.destiny < 0) {
       setError('Destin doit être un nombre positif ou nul.');
+      setLoading(false);
       return;
     }
 
-    // Validation finale pour participation, si jamais le JavaScript côté client était contourné
     let finalParticipation = formData.participation;
     if (Number.isNaN(finalParticipation) || finalParticipation < 0 || finalParticipation > 100) {
       setError('Participation doit être un nombre entre 0.0 et 100.0 avec une décimale.');
+      setLoading(false);
       return;
     }
-    // Arrondi à une décimale pour la valeur finale stockée
     finalParticipation = parseFloat(finalParticipation.toFixed(1));
 
-    // Mettre à jour le formData avec la valeur arrondie avant de soumettre
-    setFormData(prev => ({
-        ...prev,
-        participation: finalParticipation
-    }));
+    // Créer un objet PlayerData qui correspond à ce que le service attend pour la création
+    const playerToCreate: Omit<Player, 'id'> = {
+        ...formData,
+        participation: finalParticipation,
+        fellowshipId: initialFellowshipId || formData.fellowshipId // S'assurer que la confrérie initiale est bien prise en compte si elle n'est pas modifiée
+    };
 
-    setError(null);
-    // Passer la valeur finale arrondie à onCreate
-    onCreate({ ...formData, participation: finalParticipation });
+    try {
+      const createdPlayer = await playerService.createPlayer(playerToCreate); // Appeler le service de création ici
+      onCreate(createdPlayer); // Passer le joueur créé (avec l'ID) au parent
+      onClose();
+    } catch (err) {
+      console.error('Erreur lors de la création du joueur:', err);
+      setError('Impossible de créer le joueur. Veuillez réessayer.');
+    } finally {
+      setLoading(false); // Désactiver le chargement
+    }
   };
 
   const formatNumberForDisplay = useCallback((num: number): string => {
@@ -243,7 +251,6 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
     if (num === null || isNaN(num)) return '';
     return num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 1 });
   }, []);
-
 
   if (!isOpen) {
     return null;
@@ -369,8 +376,12 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
           </div>
 
           <div className="modal-actions">
-            <button type="submit" className="button-primary">Créer</button>
-            <button type="button" onClick={onClose} className="button-secondary">Annuler</button>
+            <button type="submit" className="button-primary" disabled={loading}>
+              {loading ? 'Création...' : 'Créer'}
+            </button>
+            <button type="button" onClick={onClose} className="button-secondary" disabled={loading}>
+              Annuler
+            </button>
           </div>
         </form>
       </div>
