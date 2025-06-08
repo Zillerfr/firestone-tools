@@ -349,6 +349,351 @@
     text-decoration: none;
 }
 
+/* Generic container for data sections */
+Absolument ! Je comprends tout à fait que le fond presque blanc pour les zones d'export et d'import puisse être désagréable. Repassons entièrement les couleurs pour qu'elles soient plus douces et harmonieuses, tout en respectant l'esthétique générale de votre application.
+
+Nous allons viser des teintes plus sombres et des contrastes plus marqués pour améliorer la lisibilité et le confort visuel.
+Refonte des Couleurs pour la Page Import/Export
+
+Voici les modifications à apporter à votre fichier src/PageStyles.css pour un rendu plus agréable des sections d'export et d'import. Les modifications dans le fichier DataManagement.tsx ne sont pas nécessaires pour ce changement de style, car nous nous concentrons uniquement sur le CSS.
+CSS
+
+/* src/PageStyles.css */
+
+/* Styles généraux des pages - existants, inclus pour contexte */
+.page-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: 20px auto;
+  background-color: #282c34; /* Fond de page principal, ajusté si besoin */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #abb2bf; /* Couleur de texte par défaut */
+}
+
+.entity-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #4a4f59; /* Ligne de séparation plus foncée */
+}
+
+.entity-title {
+  color: #61dafb; /* Couleur du titre, souvent un bleu clair ou turquoise */
+  margin: 0;
+  font-size: 2em;
+}
+
+.title-select {
+  background-color: #3a3f47; /* Fond du sélecteur de titre */
+  color: #abb2bf;
+  border: 1px solid #5a5f68;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 0.9em;
+  margin-left: 15px;
+  appearance: none; /* Supprime le style par défaut du navigateur */
+  cursor: pointer;
+}
+
+.title-select option {
+  background-color: #3a3f47; /* Fond des options */
+  color: #abb2bf;
+}
+
+
+/* Boutons généraux - ajustés pour un thème sombre */
+.button-primary {
+  background-color: #61dafb; /* Bleu clair / turquoise */
+  color: #282c34; /* Texte foncé sur bouton clair */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-primary:hover {
+  background-color: #4ac1e0;
+  transform: translateY(-2px);
+}
+
+.button-primary:disabled {
+  background-color: #555;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.button-secondary {
+  background-color: #5a5f68; /* Gris moyen */
+  color: #e0e0e0; /* Texte clair */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-secondary:hover {
+  background-color: #6a707a;
+  transform: translateY(-2px);
+}
+
+.delete-entity-button {
+  background-color: #e06c75; /* Rouge doux */
+  color: #282c34;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.delete-entity-button:hover {
+  background-color: #c9515c;
+  transform: translateY(-2px);
+}
+
+.action-button {
+  background: none;
+  border: 1px solid #777; /* Bordure discrète */
+  color: #61dafb; /* Couleur icône */
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.action-button:hover {
+  background-color: #3a3f47; /* Léger fond au survol */
+  border-color: #61dafb;
+}
+
+.action-button.edit-button {
+  color: #e6c07b; /* Or doux */
+}
+
+.action-button.delete-button {
+  color: #e06c75; /* Rouge doux */
+}
+
+/* Messages */
+.error-message {
+  color: #e06c75; /* Rouge doux pour les erreurs */
+  background-color: #4c2d30; /* Fond plus sombre pour l'erreur */
+  border: 1px solid #e06c75;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.success-message {
+  color: #98c379; /* Vert doux pour le succès */
+  background-color: #3a4b3f; /* Fond plus sombre pour le succès */
+  border: 1px solid #98c379;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.info-message {
+  color: #61afef; /* Bleu pour l'information */
+  background-color: #3a414c; /* Fond plus sombre pour l'info */
+  border: 1px solid #61afef;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.warning-message {
+  color: #e6c07b; /* Jaune/orange pour les avertissements */
+  background-color: #4a443a;
+  border: 1px solid #e6c07b;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+
+/* Content sections - existants, inclus pour contexte */
+.content-section {
+  background-color: #2e3239; /* Fond des sections de contenu */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.content-section h3 {
+  color: #abb2bf; /* Titres de section */
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #3e4451; /* Ligne sous les titres de section */
+  padding-bottom: 10px;
+}
+
+/* Table styles - existants, inclus pour contexte */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #3e4451; /* Bordure des cellules */
+  padding: 12px 15px;
+  text-align: left;
+  color: #abb2bf;
+}
+
+.data-table th {
+  background-color: #3a3f47; /* Fond des en-têtes de tableau */
+  color: #61dafb; /* Couleur du texte des en-têtes */
+  font-weight: bold;
+}
+
+.data-table tbody tr:nth-child(even) {
+  background-color: #32363e; /* Lignes paires plus foncées */
+}
+
+.data-table tbody tr:hover {
+  background-color: #3e4451; /* Survol des lignes */
+}
+
+.align-right {
+  text-align: right;
+}
+
+.action-column {
+  text-align: center;
+  width: 1%; /* S'adapte au contenu des boutons */
+  white-space: nowrap; /* Empêche les boutons de passer à la ligne */
+}
+
+.clickable-guild,
+.clickable-fellowship {
+  color: #61dafb; /* Rendre le nom cliquable de la même couleur que les titres */
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.clickable-guild:hover,
+.clickable-fellowship:hover {
+  color: #4ac1e0;
+}
+
+.totals-row {
+  background-color: #3e4451 !important; /* Fond pour la ligne des totaux */
+  font-weight: bold;
+  color: #e0e0e0 !important; /* Texte clair pour les totaux */
+}
+
+/* Form Group Styles */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #abb2bf;
+  font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group select {
+  width: calc(100% - 22px); /* Full width minus padding and border */
+  padding: 10px;
+  border: 1px solid #5a5f68; /* Bordure foncée */
+  border-radius: 4px;
+  background-color: #3a3f47; /* Fond du champ de saisie/sélecteur */
+  color: #abb2bf;
+  font-size: 1em;
+}
+
+.form-group select {
+  appearance: none; /* Remove default arrow */
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23abb2bf" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px top 50%;
+  background-size: 20px auto;
+}
+
+.form-group select:focus,
+.form-group input[type="text"]:focus {
+  border-color: #61dafb; /* Bordure bleue au focus */
+  outline: none;
+}
+
+.form-group button {
+  margin-left: 10px; /* Space between select/input and button */
+}
+
+/* --- Specific styles for DataManagement page --- */
+
+.data-section {
+  background-color: #3a3f47; /* Fond plus foncé pour les sections export/import */
+  border: 1px solid #4a4f59; /* Bordure foncée */
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.data-section h3 {
+  color: #61dafb; /* Titre des sections export/import en bleu clair */
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #5a5f68; /* Ligne de séparation plus claire sous le titre */
+  padding-bottom: 10px;
+}
+
+.data-textarea {
+  width: calc(100% - 20px); /* Full width minus padding */
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #5a5f68; /* Bordure foncée */
+  border-radius: 4px;
+  background-color: #282c34; /* Fond très sombre pour le textarea de données */
+  color: #98c379; /* Texte vert clair pour les données (comme une console) */
+  font-family: monospace; /* Pour la lisibilité du code/JSON */
+  font-size: 0.9em;
+  resize: vertical;
+  min-height: 150px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* Légère ombre interne */
+}
+
+.data-textarea::placeholder {
+  color: #777; /* Couleur du placeholder */
+}
+
+.data-textarea:focus {
+  border-color: #61dafb; /* Bordure bleue au focus */
+  outline: none;
+}
+
+.section-divider {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(to right, rgba(97, 218, 251, 0), rgba(97, 218, 251, 0.4), rgba(97, 218, 251, 0)); /* Dégradé de bleu clair */
+  margin: 40px 0;
+}
+
+/* Ajustements pour les boutons spécifiques à cette page si nécessaire */
+.data-section .button-primary,
+.data-section .button-secondary {
+  margin-top: 15px; /* Espace au-dessus des boutons dans les sections */
+}
+
 /* Media queries pour la réactivité */
 @media (max-width: 768px) {
     .page-container {
