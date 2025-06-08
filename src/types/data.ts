@@ -6,7 +6,6 @@ export interface Player {
   role: string; // 'poste'
   warCry: number; // 'cri de guerre'
   destiny: number; // 'destin'
-  isMember: boolean; // 'membre'
   participation: number; // 'participation' (pourcentage, donc entre 0 et 100)
   guildId: string | null;     // ID de la guilde, ou null si aucune
   fellowshipId: string | null; // ID de la confrérie, ou null si aucune

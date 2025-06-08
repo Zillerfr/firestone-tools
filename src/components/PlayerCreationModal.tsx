@@ -16,7 +16,6 @@ interface PlayerFormState {
   role: string;
   warCry: number;
   destiny: number;
-  isMember: boolean;
   participation: number;
   guildId: string | null;
   fellowshipId: string | null;
@@ -28,7 +27,6 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
     role: 'Membre',
     warCry: 0,
     destiny: 0,
-    isMember: false,
     participation: 0,
     guildId: null,
     fellowshipId: null,
@@ -67,19 +65,18 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
       document.body.style.overflow = 'hidden';
       
       // Réinitialiser les états et les valeurs affichées à l'ouverture
+      setWarCryString('0');
+      setDestinyString('0');
+      setParticipationString('0');
       setFormData({
         name: '',
         role: 'Membre',
         warCry: 0,
         destiny: 0,
-        isMember: false,
         participation: 0,
         guildId: null,
         fellowshipId: null,
       });
-      setWarCryString('0');
-      setDestinyString('0');
-      setParticipationString('0');
 
       setError(null);
       loadAssociations();
@@ -132,14 +129,9 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
   }, [isOpen, handleKeyDown]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement;
+    const { name, value } = e.target as HTMLInputElement;
 
-    if (type === 'checkbox') {
-        setFormData(prev => ({
-            ...prev,
-            [name]: checked,
-        }));
-    } else if (['guildId', 'fellowshipId'].includes(name)) {
+    if (['guildId', 'fellowshipId'].includes(name)) {
         setFormData(prev => ({
             ...prev,
             [name]: value === '' ? null : value,
@@ -325,17 +317,6 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate }: PlayerCreationModalP
               onChange={handleChange}
               placeholder="Ex: 987 654"
               required
-            />
-          </div>
-
-          <div className="form-group checkbox-group">
-            <label htmlFor="isMember">Membre Actif&nbsp;:</label>
-            <input
-              type="checkbox"
-              id="isMember"
-              name="isMember"
-              checked={formData.isMember}
-              onChange={handleChange}
             />
           </div>
 

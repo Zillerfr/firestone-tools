@@ -48,19 +48,6 @@
      mais gardez-le à l'esprit si le problème persiste. */
 }
 
-/* Ces classes ne sont plus strictement nécessaires pour le positionnement gauche/droite
-   grâce à justify-content: space-between sur le parent `nav`.
-   Cependant, on peut les garder pour la sémantique si vous en avez besoin pour d'autres styles.
-   Assurons-nous qu'elles ne causent pas de conflit.
-*/
-.app-header nav ul.nav-left {
-  /* Pas de margin-right: auto ici, car justify-content: space-between gère la distribution */
-}
-
-.app-header nav ul.nav-right {
-  /* Pas de margin-left: auto ici, pour la même raison */
-}
-
 .app-header nav ul li a {
   color: white;
   text-decoration: none;
