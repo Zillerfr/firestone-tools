@@ -7,7 +7,7 @@ import { guildService } from '../services/guildService';
 import { FellowshipContext } from '../contexts/FellowshipContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 import PlayerCreationModal from '../components/PlayerCreationModal';
-import type { Player, Fellowship, Guild } from '../types/data';
+import type { Player, Fellowship, Guild } from '../types/data'; // Assurez-vous que Player et Fellowship sont bien importés
 import './PageStyles.css';
 
 const FellowshipManagement: React.FC = () => {
@@ -22,7 +22,7 @@ const FellowshipManagement: React.FC = () => {
   const [allFellowships, setAllFellowships] = useState<Fellowship[]>([]);
   const [allGuilds, setAllGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [initialDataLoaded, setInitialDataLoaded] = useState<boolean>(false); // <-- NOUVEL ÉTAT
+  const [initialDataLoaded, setInitialDataLoaded] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteFellowshipModalOpen, setIsDeleteFellowshipModalOpen] = useState<boolean>(false);
   const [isRemovePlayerModalOpen, setIsRemovePlayerModalOpen] = useState<boolean>(false);
@@ -54,7 +54,7 @@ const FellowshipManagement: React.FC = () => {
         console.error('Erreur lors du chargement des confréries/guildes initiales:', err);
         setError('Impossible de charger la liste des confréries ou des guildes.');
       } finally {
-        setInitialDataLoaded(true); // <-- Indique que le chargement initial est terminé
+        setInitialDataLoaded(true);
       }
     };
     loadGlobalAssociations();
@@ -65,6 +65,11 @@ const FellowshipManagement: React.FC = () => {
     setError(null);
 
     try {
+      // Récupérer toutes les confréries une seule fois ici pour éviter des appels répétitifs
+      const allFellowshipsData = await fellowshipService.getAllFellowships();
+      const fellowshipMap = new Map<string, string>(); // Map fellowship ID to name
+      allFellowshipsData.forEach(f => fellowshipMap.set(f.id, f.name));
+
       if (fellowshipId) {
         const fellowship = await fellowshipService.getFellowshipById(fellowshipId);
         if (fellowship) {
@@ -72,8 +77,8 @@ const FellowshipManagement: React.FC = () => {
           const fetchedPlayers = await playerService.getPlayersByFellowshipId(fellowshipId);
 
           const playersWithGuildNames = fetchedPlayers.map(player => ({
-              ...player,
-              guild: allGuilds.find(g => g.id === player.guildId) || null
+            ...player,
+            guild: allGuilds.find(g => g.id === player.guildId) || null
           }));
           setPlayers(playersWithGuildNames);
 
@@ -81,10 +86,15 @@ const FellowshipManagement: React.FC = () => {
           const availablePlayerMap = new Map<string, Player>();
 
           allPlayers.forEach(player => {
-              const isInCurrentFellowship = fetchedPlayers.some(p => p.id === player.id);
-              if (!isInCurrentFellowship) {
-                  availablePlayerMap.set(player.id, player);
-              }
+            const isInCurrentFellowship = fetchedPlayers.some(p => p.id === player.id);
+            if (!isInCurrentFellowship) {
+              // Si le joueur est dans une confrérie, nous créons un objet Fellowship
+              // et l'attachons à l'objet Player.
+              const playerFellowship = player.fellowshipId
+                ? allFellowshipsData.find(f => f.id === player.fellowshipId) || null
+                : null;
+              availablePlayerMap.set(player.id, { ...player, fellowship: playerFellowship });
+            }
           });
 
           setAvailablePlayers(Array.from(availablePlayerMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
@@ -92,14 +102,23 @@ const FellowshipManagement: React.FC = () => {
         } else {
           setFellowshipName(null);
           setPlayers([]);
-          setAvailablePlayers(await playerService.getAllPlayers());
+          const allPlayers = await playerService.getAllPlayers();
+          const playersWithFellowshipInfo = allPlayers.map(player => ({
+            ...player,
+            fellowship: player.fellowshipId ? allFellowshipsData.find(f => f.id === player.fellowshipId) || null : null
+          }));
+          setAvailablePlayers(playersWithFellowshipInfo.sort((a, b) => a.name.localeCompare(b.name)));
           setError('La confrérie sélectionnée n\'existe pas. Veuillez en créer une ou en choisir une autre.');
         }
       } else {
         setFellowshipName(null);
         setPlayers([]);
-        setAvailablePlayers(await playerService.getAllPlayers());
-        // Pas d'erreur ici si aucun ID, juste un message d'information
+        const allPlayers = await playerService.getAllPlayers();
+        const playersWithFellowshipInfo = allPlayers.map(player => ({
+          ...player,
+          fellowship: player.fellowshipId ? allFellowshipsData.find(f => f.id === player.fellowshipId) || null : null
+        }));
+        setAvailablePlayers(playersWithFellowshipInfo.sort((a, b) => a.name.localeCompare(b.name)));
         setError('Aucune confrérie sélectionnée. Veuillez en choisir une ou en créer une nouvelle.');
       }
     } catch (err) {
@@ -112,13 +131,10 @@ const FellowshipManagement: React.FC = () => {
       setLoading(false);
       setSelectedPlayerToAdd('');
     }
-  }, [fellowshipId, allGuilds]);
+  }, [fellowshipId, allGuilds]); // Dépendance à allGuilds est correcte pour les players dans la confrérie actuelle
 
   useEffect(() => {
-    // Déclencher le chargement des données seulement si les données initiales sont chargées
-    // et si fellowshipId change, ou si allGuilds/allFellowships changent (bien que fetchFellowshipAndPlayers
-    // en dépende déjà)
-    if (initialDataLoaded) { // <-- Utiliser le nouvel état initialDataLoaded
+    if (initialDataLoaded) {
       fetchFellowshipAndPlayers();
     }
   }, [fetchFellowshipAndPlayers, initialDataLoaded]);
@@ -177,8 +193,8 @@ const FellowshipManagement: React.FC = () => {
 
   const handleAddPlayer = async () => {
     if (isFellowshipFull) {
-        setError('La confrérie a déjà le nombre maximum de joueurs (5).');
-        return;
+      setError('La confrérie a déjà le nombre maximum de joueurs (5).');
+      return;
     }
 
     if (selectedPlayerToAdd === 'create-new-player') {
@@ -228,78 +244,78 @@ const FellowshipManagement: React.FC = () => {
   // On utilise 'loading' ici pour gérer le cas où un ID est présent mais la confrérie est introuvable
   // ou si la confrérie est en cours de chargement spécifique
   if (!fellowshipId || fellowshipName === null) {
-      return (
-          <div className="page-container">
-              <div className="entity-header-row">
-                  <h2 className="entity-title">
-                      Gestion des Confréries
-                      {/* Afficher le sélecteur seulement s'il y a des confréries disponibles */}
-                      {allFellowships.length > 0 && (
-                          <select
-                              value={fellowshipId || ''}
-                              onChange={handleFellowshipChange}
-                              className="title-select"
-                              aria-label="Sélectionner une autre confrérie"
-                          >
-                              <option value="">-- Sélectionner une confrérie --</option>
-                              {allFellowships.map((f) => (
-                                  <option key={f.id} value={f.id}>
-                                      {f.name}
-                                  </option>
-                              ))}
-                          </select>
-                      )}
-                  </h2>
-              </div>
-              <div className="content-section">
-                  {loading ? ( // Afficher un message de chargement si un ID est fourni mais la confrérie est encore en cours de recherche
-                    <p className="loading-message">Chargement des détails de la confrérie...</p>
-                  ) : (
-                    <>
-                      {error && <p className="error-message">{error}</p>}
-                      {!fellowshipId && allFellowships.length === 0 && (
-                        <p className="info-message">Aucune confrérie trouvée. Vous pouvez créer une nouvelle confrérie ou un nouveau joueur (qui pourra ensuite être assigné à une confrérie).</p>
-                      )}
-                      {!fellowshipId && allFellowships.length > 0 && (
-                        <p className="info-message">Aucune confrérie sélectionnée. Veuillez en choisir une dans la liste déroulante ci-dessus ou créer un nouveau joueur.</p>
-                      )}
-                      {fellowshipName === null && fellowshipId && (
-                        <p className="info-message">La confrérie avec l'ID "{fellowshipId}" n'a pas été trouvée. Veuillez vérifier l'URL, choisir une autre confrérie, ou créer un nouveau joueur.</p>
-                      )}
+    return (
+      <div className="page-container">
+        <div className="entity-header-row">
+          <h2 className="entity-title">
+            Gestion des Confréries
+            {/* Afficher le sélecteur seulement s'il y a des confréries disponibles */}
+            {allFellowships.length > 0 && (
+              <select
+                value={fellowshipId || ''}
+                onChange={handleFellowshipChange}
+                className="title-select"
+                aria-label="Sélectionner une autre confrérie"
+              >
+                <option value="">-- Sélectionner une confrérie --</option>
+                {allFellowships.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </h2>
+        </div>
+        <div className="content-section">
+          {loading ? (
+            <p className="loading-message">Chargement des détails de la confrérie...</p>
+          ) : (
+            <>
+              {error && <p className="error-message">{error}</p>}
+              {!fellowshipId && allFellowships.length === 0 && (
+                <p className="info-message">Aucune confrérie trouvée. Vous pouvez créer une nouvelle confrérie ou un nouveau joueur (qui pourra ensuite être assigné à une confrérie).</p>
+              )}
+              {!fellowshipId && allFellowships.length > 0 && (
+                <p className="info-message">Aucune confrérie sélectionnée. Veuillez en choisir une dans la liste déroulante ci-dessus ou créer un nouveau joueur.</p>
+              )}
+              {fellowshipName === null && fellowshipId && (
+                <p className="info-message">La confrérie avec l'ID "{fellowshipId}" n'a pas été trouvée. Veuillez vérifier l'URL, choisir une autre confrérie, ou créer un nouveau joueur.</p>
+              )}
 
-                      <div className="add-player-section">
-                          <h4>Créer un nouveau joueur</h4>
-                          <p className="info-message">Vous pouvez créer un nouveau joueur, même s'il n'est pas encore associé à une confrérie.</p>
-                          <div className="form-group">
-                              <label htmlFor="selectPlayerCreate">Action :</label>
-                              <select
-                                id="selectPlayerCreate"
-                                value={selectedPlayerToAdd}
-                                onChange={(e) => setSelectedPlayerToAdd(e.target.value)}
-                              >
-                                <option value="">-- Choisir une action --</option>
-                                <option value="create-new-player">Créer un nouveau joueur</option>
-                              </select>
-                              <button
-                                onClick={handleAddPlayer}
-                                className="button-primary"
-                                disabled={selectedPlayerToAdd !== 'create-new-player'}
-                              >
-                                Créer
-                              </button>
-                          </div>
-                      </div>
-                    </>
-                  )}
+              <div className="add-player-section">
+                <h4>Créer un nouveau joueur</h4>
+                <p className="info-message">Vous pouvez créer un nouveau joueur, même s'il n'est pas encore associé à une confrérie.</p>
+                <div className="form-group">
+                  <label htmlFor="selectPlayerCreate">Action :</label>
+                  <select
+                    id="selectPlayerCreate"
+                    value={selectedPlayerToAdd}
+                    onChange={(e) => setSelectedPlayerToAdd(e.target.value)}
+                  >
+                    <option value="">-- Choisir une action --</option>
+                    <option value="create-new-player">Créer un nouveau joueur</option>
+                  </select>
+                  <button
+                    onClick={handleAddPlayer}
+                    className="button-primary"
+                    disabled={selectedPlayerToAdd !== 'create-new-player'}
+                  >
+                    Créer
+                  </button>
+                </div>
               </div>
-              <PlayerCreationModal
-                isOpen={isPlayerCreationModalOpen}
-                onClose={() => setIsPlayerCreationModalOpen(false)}
-                onCreate={handlePlayerCreated}
-                initialFellowshipId={fellowshipId}
-              />
-          </div>
-      );
+            </>
+          )}
+        </div>
+        <PlayerCreationModal
+          isOpen={isPlayerCreationModalOpen}
+          onClose={() => setIsPlayerCreationModalOpen(false)}
+          onCreate={handlePlayerCreated}
+          initialFellowshipId={fellowshipId}
+        />
+      </div>
+    );
   }
 
   // 3. Rendu normal lorsque la confrérie est trouvée et chargée
@@ -400,34 +416,35 @@ const FellowshipManagement: React.FC = () => {
           )}
 
           <div className="add-player-section">
-              <h4>Ajouter un joueur à la confrérie</h4>
-              {isFellowshipFull && (
-                  <p className="warning-message">Cette confrérie a atteint sa limite de {MAX_PLAYERS_IN_FELLOWSHIP} joueurs.</p>
-              )}
-              <div className="form-group">
-                  <label htmlFor="selectPlayer">Sélectionner un joueur :</label>
-                  <select
-                      id="selectPlayer"
-                      value={selectedPlayerToAdd}
-                      onChange={(e) => setSelectedPlayerToAdd(e.target.value)}
-                      disabled={isFellowshipFull}
-                  >
-                      <option value="">-- Choisir un joueur --</option>
-                      <option value="create-new-player" disabled={isFellowshipFull}>Créer un joueur</option>
-                      {availablePlayers.map((player) => (
-                          <option key={player.id} value={player.id}>
-                              {player.name}
-                          </option>
-                      ))}
-                  </select>
-                  <button
-                      onClick={handleAddPlayer}
-                      className="button-primary"
-                      disabled={!selectedPlayerToAdd || isFellowshipFull}
-                  >
-                      Ajouter
-                  </button>
-              </div>
+            <h4>Ajouter un joueur à la confrérie</h4>
+            {isFellowshipFull && (
+              <p className="warning-message">Cette confrérie a atteint sa limite de {MAX_PLAYERS_IN_FELLOWSHIP} joueurs.</p>
+            )}
+            <div className="form-group">
+              <label htmlFor="selectPlayer">Sélectionner un joueur :</label>
+              <select
+                id="selectPlayer"
+                value={selectedPlayerToAdd}
+                onChange={(e) => setSelectedPlayerToAdd(e.target.value)}
+                disabled={isFellowshipFull}
+              >
+                <option value="">-- Choisir un joueur --</option>
+                <option value="create-new-player" disabled={isFellowshipFull}>Créer un joueur</option>
+                {availablePlayers.map((player) => (
+                  <option key={player.id} value={player.id}>
+                    {/* Utiliser player.fellowship?.name pour accéder au nom de la confrérie */}
+                    {player.name} {player.fellowship ? `(${player.fellowship.name})` : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddPlayer}
+                className="button-primary"
+                disabled={!selectedPlayerToAdd || isFellowshipFull}
+              >
+                Ajouter
+              </button>
+            </div>
           </div>
 
         </div>
