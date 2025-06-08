@@ -1,22 +1,16 @@
 /* src/pages/PageStyles.css */
 
 .page-container {
-    /* Gardons un padding vertical pour le haut et le bas de la page */
     padding-top: 20px;
     padding-bottom: 20px;
-
-    /* Ajoutez un padding horizontal pour les marges de sécurité sur les côtés */
     padding-left: 30px;
     padding-right: 30px;
-
-    color: white; /* Couleur du texte par défaut */
-    width: 100%; /* Assurez-vous qu'il prenne 100% de la largeur disponible */
-    box-sizing: border-box; /* IMPORTANT : Inclut les paddings dans la largeur totale */
+    color: white;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* Styles génériques pour l'en-tête de la page de gestion */
-/* Ces styles s'appliqueront maintenant à la fois aux guildes et aux confréries */
-.entity-header-row { /* Ancien .guild-header-row */
+.entity-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -25,16 +19,18 @@
     border-bottom: 1px solid #444;
     flex-wrap: wrap;
     gap: 15px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.entity-title { /* Ancien .guild-title */
+.entity-title {
     margin: 0;
     font-size: 2em;
     color: #61dafb;
     word-break: break-word;
 }
 
-.delete-entity-button { /* Ancien .delete-guild-button */
+.delete-entity-button {
     background-color: #f44336;
     color: white;
     padding: 10px 20px;
@@ -56,32 +52,34 @@
     transform: translateY(0);
 }
 
-/* NOUVEAUX STYLES POUR LE FORMULAIRE DE GESTION DE JOUEUR */
 .player-management-form {
-    /* background-color: #2e3136; */ /* Supprimé pour enlever l'encadré */
-    padding: 0; /* Pas de padding global sur le formulaire lui-même */
-    border-radius: 0; /* Pas de bordure arrondie */
-    box-shadow: none; /* Pas d'ombre */
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
     gap: 18px;
     margin-top: 20px;
+    width: 100%;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .form-group {
-    display: flex; /* Utilise flexbox pour aligner label et input */
-    align-items: center; /* Centre verticalement les éléments */
-    gap: 15px; /* Espace entre le label et l'input */
-    flex-wrap: wrap; /* Permet aux éléments de passer à la ligne si l'écran est petit */
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
 .form-group label {
     font-weight: bold;
     color: #bbbbbb;
     font-size: 0.9em;
-    text-align: right; /* Justifie le texte à droite */
-    min-width: 150px; /* Largeur minimale pour les labels pour l'alignement */
-    flex-shrink: 0; /* Empêche le label de rétrécir */
+    text-align: right;
+    min-width: 150px;
+    flex-shrink: 0;
 }
 
 .form-group input[type="text"],
@@ -92,8 +90,8 @@
     padding: 9px 10px;
     border-radius: 4px;
     font-size: 0.95em;
-    flex-grow: 1; /* Permet à l'input/select de prendre l'espace restant */
-    max-width: 400px; /* Limite la largeur maximale du champ de saisie */
+    flex-grow: 1;
+    max-width: 400px;
     box-sizing: border-box;
 }
 
@@ -104,7 +102,6 @@
     box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
 }
 
-/* Styles pour les options de select */
 .form-group select option {
     background-color: #3a3f45;
     color: #f8f8f2;
@@ -183,6 +180,105 @@
     border: 1px solid #388e3c;
 }
 
+/* --- STYLES GÉNÉRIQUES POUR LES SECTIONS DE CONTENU (comme les tableaux) --- */
+.content-section {
+    width: 100%;
+    max-width: 800px;
+    margin: 30px auto 20px auto;
+    background-color: #2e3136;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.content-section h3 {
+    color: #61dafb;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.5em;
+    width: 100%;
+}
+
+/* --- STYLES GÉNÉRIQUES POUR LES TABLEAUX DE DONNÉES --- */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    color: white;
+    min-width: 600px; /* Conserve la largeur minimale pour éviter le compactage */
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 15px;
+    border: 1px solid #4a4d52;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: #3a3f45;
+    color: #61dafb;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85em;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #282c34;
+}
+
+.data-table tbody tr:hover {
+    background-color: #3e444b;
+}
+
+.align-right {
+    text-align: right;
+}
+
+.data-table .totals-row {
+    background-color: #4a4d52;
+    font-weight: bold;
+    color: #ffffff;
+    border-top: 2px solid #61dafb;
+}
+
+.data-table .totals-row td {
+    font-size: 1.1em;
+}
+
+/* --- NOUVEAUX STYLES POUR LES COLONNES D'ACTION ET LES BOUTONS --- */
+.action-column {
+    text-align: center !important; /* Centre les icônes dans la colonne */
+    width: 80px; /* Donne une largeur fixe aux colonnes d'action */
+    white-space: nowrap; /* Empêche les boutons de passer à la ligne */   
+}
+
+.action-button {
+    background: none; /* Pas de fond */
+    border: none; /* Pas de bordure */
+    cursor: pointer;
+    font-size: 1.3em; /* Taille plus grande pour les icônes */
+    padding: 5px; /* Petit padding pour faciliter le clic */
+    margin: 0 5px; /* Espace entre les boutons si plusieurs dans une cellule */
+    transition: transform 0.2s ease;
+    color: inherit; /* Utilise la couleur du texte parent (blanc) */
+}
+
+.action-button:hover {
+    transform: scale(1.2); /* Effet de zoom au survol */
+}
+
+
 /* Media queries pour la réactivité */
 @media (max-width: 768px) {
     .page-container {
@@ -204,18 +300,44 @@
     .form-actions button {
         width: 100%;
     }
-    /* Pour les écrans plus petits, permettre au label et à l'input de s'empiler */
     .form-group {
         flex-direction: column;
-        align-items: flex-start; /* Aligne le label à gauche en mode colonne */
-        gap: 6px; /* Réduit l'espace */
+        align-items: flex-start;
+        gap: 6px;
     }
     .form-group label {
-        text-align: left; /* Aligne le label à gauche en mode colonne */
-        min-width: unset; /* Supprime la largeur minimale pour laisser le label respirer */
+        text-align: left;
+        min-width: unset;
     }
     .form-group input[type="text"],
     .form-group select {
-        max-width: 100%; /* L'input prend toute la largeur disponible */
+        max-width: 100%;
+    }
+
+    .player-management-form,
+    .content-section {
+        max-width: 100%;
+        padding: 15px;
+    }
+    .data-table {
+        min-width: 100%;
+    }
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+        font-size: 0.8em;
+    }
+    .data-table .totals-row td {
+        font-size: 0.9em;
+    }
+
+    .action-column {
+        width: auto; /* Laisse la largeur s'adapter sur mobile */
+        padding: 8px 5px; /* Réduit le padding */
+    }
+    .action-button {
+        font-size: 1.1em; /* Ajuste la taille de l'icône sur mobile */
+        padding: 3px;
+        margin: 0 3px;
     }
 }
