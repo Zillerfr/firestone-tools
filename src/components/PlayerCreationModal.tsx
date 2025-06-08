@@ -2,16 +2,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { guildService } from '../services/guildService';
 import { fellowshipService } from '../services/fellowshipService';
-import { playerService } from '../services/playerService'; // Importez playerService ici
+import { playerService } from '../services/playerService';
 import type { Guild, Fellowship, Player } from '../types/data';
 import './Modal.css';
 
 interface PlayerCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Changez la signature de onCreate: la modale va créer le joueur et renvoyer le joueur AVEC son ID
   onCreate: (player: Player) => void;
-  // Nouvelle prop pour pré-sélectionner la confrérie
   initialFellowshipId?: string | null;
 }
 
@@ -20,7 +18,6 @@ interface PlayerFormState {
   role: string;
   warCry: number;
   destiny: number;
-  participation: number;
   guildId: string | null;
   fellowshipId: string | null;
 }
@@ -31,23 +28,21 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
     role: 'Membre',
     warCry: 0,
     destiny: 0,
-    participation: 0,
     guildId: null,
-    fellowshipId: null, // Sera écrasé par initialFellowshipId si fourni
+    fellowshipId: null,
   });
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [fellowships, setFellowships] = useState<Fellowship[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false); // Ajouter un état de chargement
+  const [loading, setLoading] = useState<boolean>(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const firstFocusableElementRef = useRef<HTMLInputElement>(null);
 
   const [warCryString, setWarCryString] = useState<string>('0');
   const [destinyString, setDestinyString] = useState<string>('0');
-  const [participationString, setParticipationString] = useState<string>('0');
-
+  
   const loadAssociations = useCallback(async () => {
     try {
       const fetchedGuilds = await guildService.getAllGuilds();
@@ -71,15 +66,13 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
       // Réinitialiser les états et les valeurs affichées à l'ouverture
       setWarCryString('0');
       setDestinyString('0');
-      setParticipationString('0');
       setFormData({
         name: '',
         role: 'Membre',
         warCry: 0,
         destiny: 0,
-        participation: 0,
         guildId: null,
-        fellowshipId: initialFellowshipId || null, // Utilise initialFellowshipId ici
+        fellowshipId: initialFellowshipId || null,
       });
 
       setError(null);
@@ -90,7 +83,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen, loadAssociations, initialFellowshipId]); // Ajout de initialFellowshipId dans les dépendances
+  }, [isOpen, loadAssociations, initialFellowshipId]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!modalRef.current) return;
@@ -143,7 +136,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
     } else {
       // Gérer les champs textuels convertis en nombres
       if (name === 'warCry') {
-        setWarCryString(value); // Stocke la chaîne brute pour l'affichage
+        setWarCryString(value);
         const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
         const parsedValue = parseInt(cleanedValue, 10);
         setFormData(prev => ({
@@ -151,41 +144,15 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
           [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
         }));
       } else if (name === 'destiny') {
-        setDestinyString(value); // Stocke la chaîne brute pour l'affichage
+        setDestinyString(value);
         const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
         const parsedValue = parseInt(cleanedValue, 10);
         setFormData(prev => ({
           ...prev,
           [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
         }));
-      } else if (name === 'participation') {
-        let inputVal = value;
-        inputVal = inputVal.replace(',', '.');
-
-        const regex = /^\d*(\.\d{0,1})?$/;
-
-        if (inputVal === '' || inputVal === '.') {
-          setParticipationString(inputVal);
-          setFormData(prev => ({ ...prev, [name]: 0 }));
-        } else if (regex.test(inputVal)) {
-          let parsedValue = parseFloat(inputVal);
-
-          if (parsedValue > 100) {
-            parsedValue = 100;
-            setParticipationString('100');
-          } else if (parsedValue < 0) {
-            parsedValue = 0;
-            setParticipationString('0');
-          } else {
-            setParticipationString(inputVal);
-          }
-
-          setFormData(prev => ({
-            ...prev,
-            [name]: isNaN(parsedValue) ? 0 : parsedValue,
-          }));
-        }
-      } else {
+      }
+      else {
         setFormData(prev => ({
           ...prev,
           [name]: value,
@@ -194,9 +161,9 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => { // Rendre la fonction async
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); // Activer le chargement
+    setLoading(true);
     setError(null);
 
     if (formData.name.trim() === '') {
@@ -215,41 +182,30 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
       return;
     }
 
-    let finalParticipation = formData.participation;
-    if (Number.isNaN(finalParticipation) || finalParticipation < 0 || finalParticipation > 100) {
-      setError('Participation doit être un nombre entre 0.0 et 100.0 avec une décimale.');
-      setLoading(false);
-      return;
-    }
-    finalParticipation = parseFloat(finalParticipation.toFixed(1));
-
-    // Créer un objet PlayerData qui correspond à ce que le service attend pour la création
     const playerToCreate: Omit<Player, 'id'> = {
-        ...formData,
-        participation: finalParticipation,
-        fellowshipId: initialFellowshipId || formData.fellowshipId // S'assurer que la confrérie initiale est bien prise en compte si elle n'est pas modifiée
+        name: formData.name,
+        role: formData.role,
+        warCry: formData.warCry,
+        destiny: formData.destiny,
+        guildId: formData.guildId,
+        fellowshipId: initialFellowshipId || formData.fellowshipId
     };
 
     try {
-      const createdPlayer = await playerService.createPlayer(playerToCreate); // Appeler le service de création ici
-      onCreate(createdPlayer); // Passer le joueur créé (avec l'ID) au parent
+      const createdPlayer = await playerService.createPlayer(playerToCreate);
+      onCreate(createdPlayer);
       onClose();
     } catch (err) {
       console.error('Erreur lors de la création du joueur:', err);
       setError('Impossible de créer le joueur. Veuillez réessayer.');
     } finally {
-      setLoading(false); // Désactiver le chargement
+      setLoading(false);
     }
   };
 
   const formatNumberForDisplay = useCallback((num: number): string => {
     if (num === null || isNaN(num)) return '';
     return num.toLocaleString(undefined, { maximumFractionDigits: 0 });
-  }, []);
-
-  const formatParticipationForDisplay = useCallback((num: number): string => {
-    if (num === null || isNaN(num)) return '';
-    return num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 1 });
   }, []);
 
   if (!isOpen) {
@@ -326,21 +282,6 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId }:
               required
             />
           </div>
-
-          <div className="form-group">
-            <label htmlFor="participation">Participation (%)&nbsp;:</label>
-            <input
-              type="text"
-              id="participation"
-              name="participation"
-              value={participationString || ''}
-              onBlur={() => setParticipationString(formatParticipationForDisplay(formData.participation))}
-              onChange={handleChange}
-              placeholder="Ex: 11,2"
-              required
-            />
-          </div>
-
           <div className="form-group">
             <label htmlFor="guildId">Guilde&nbsp;:</label>
             <select

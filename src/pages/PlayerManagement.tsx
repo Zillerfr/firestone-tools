@@ -14,7 +14,6 @@ interface PlayerFormState {
   role: string;
   warCry: number;
   destiny: number;
-  participation: number;
   guildId: string | null;
   fellowshipId: string | null;
 }
@@ -29,15 +28,13 @@ const PlayerManagement: React.FC = () => {
     role: 'Membre',
     warCry: 0,
     destiny: 0,
-    participation: 0,
     guildId: null,
     fellowshipId: null,
   });
 
   const [warCryString, setWarCryString] = useState<string>('');
   const [destinyString, setDestinyString] = useState<string>('');
-  const [participationString, setParticipationString] = useState<string>('');
-
+  
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [fellowships, setFellowships] = useState<Fellowship[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -48,11 +45,6 @@ const PlayerManagement: React.FC = () => {
   const formatNumberForDisplay = useCallback((num: number): string => {
     if (num === null || isNaN(num)) return '';
     return num.toLocaleString(undefined, { maximumFractionDigits: 0 });
-  }, []);
-
-  const formatParticipationForDisplay = useCallback((num: number): string => {
-    if (num === null || isNaN(num)) return '';
-    return num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 1 });
   }, []);
 
   const loadAssociations = useCallback(async () => {
@@ -83,13 +75,11 @@ const PlayerManagement: React.FC = () => {
               role: player.role,
               warCry: player.warCry,
               destiny: player.destiny,
-              participation: player.participation,
               guildId: player.guildId || null,
               fellowshipId: player.fellowshipId || null,
             });
             setWarCryString(formatNumberForDisplay(player.warCry));
             setDestinyString(formatNumberForDisplay(player.destiny));
-            setParticipationString(formatParticipationForDisplay(player.participation));
             setIsFormDirty(false);
           } else {
             setError('Joueur non trouvé.');
@@ -108,7 +98,7 @@ const PlayerManagement: React.FC = () => {
       }
     };
     fetchPlayerAndAssociations();
-  }, [playerId, navigate, loadAssociations, formatNumberForDisplay, formatParticipationForDisplay]);
+  }, [playerId, navigate, loadAssociations, formatNumberForDisplay]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -137,23 +127,8 @@ const PlayerManagement: React.FC = () => {
                 ...formData,
                 [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
             };
-        } else if (name === 'participation') {
-            setParticipationString(value);
-            const cleanedValue = value.replace(',', '.');
-            let parsedValue = parseFloat(cleanedValue);
-
-            if (isNaN(parsedValue)) {
-                parsedValue = 0;
-            } else if (parsedValue < 0) {
-                parsedValue = 0;
-            } else if (parsedValue > 100) {
-                parsedValue = 100;
-            }
-            updatedFormData = {
-                ...formData,
-                [name]: parsedValue,
-            };
-        } else {
+        }
+        else {
             updatedFormData = {
                 ...formData,
                 [name]: value,
@@ -183,20 +158,9 @@ const PlayerManagement: React.FC = () => {
       return;
     }
 
-    let finalParticipation = formData.participation;
-    if (Number.isNaN(finalParticipation)) {
-      finalParticipation = 0;
-    }
-    finalParticipation = Math.max(0, Math.min(100, parseFloat(finalParticipation.toFixed(1))));
-
-    setFormData(prev => ({
-        ...prev,
-        participation: finalParticipation
-    }));
-
     try {
       setError(null);
-      const { ...playerDataToUpdate } = { ...formData, participation: finalParticipation };
+      const { ...playerDataToUpdate } = formData;
 
       const updatedPlayer = await playerService.updatePlayer(playerId, playerDataToUpdate);
       if (updatedPlayer) {
@@ -204,8 +168,7 @@ const PlayerManagement: React.FC = () => {
         setIsFormDirty(false);
         setWarCryString(formatNumberForDisplay(updatedPlayer.warCry));
         setDestinyString(formatNumberForDisplay(updatedPlayer.destiny));
-        setParticipationString(formatParticipationForDisplay(updatedPlayer.participation));
-        // navigate('/'); // We can remove this if we want to stay on the page after save
+        navigate('/');
       } else {
         setError('Échec de la mise à jour du joueur ou joueur non trouvé.');
       }
@@ -235,7 +198,6 @@ const PlayerManagement: React.FC = () => {
     }
   };
 
-  // --- NEW NAVIGATION HANDLERS ---
   const handleGoToFellowship = () => {
     if (formData.fellowshipId) {
       navigate(`/fellowship-management/${formData.fellowshipId}`);
@@ -247,7 +209,6 @@ const PlayerManagement: React.FC = () => {
       navigate(`/guild-management/${formData.guildId}`);
     }
   };
-  // --- END NEW NAVIGATION HANDLERS ---
 
   if (loading) {
     return <p className="loading-message">Chargement des détails du joueur...</p>;
@@ -331,21 +292,6 @@ const PlayerManagement: React.FC = () => {
             required
           />
         </div>
-
-        <div className="form-group">
-          <label htmlFor="participation">Participation (%)&nbsp;:</label>
-          <input
-            type="text"
-            id="participation"
-            name="participation"
-            value={participationString}
-            onBlur={() => setParticipationString(formatParticipationForDisplay(formData.participation))}
-            onChange={handleChange}
-            placeholder="Ex: 11,2"
-            required
-          />
-        </div>
-
         <div className="form-group">
           <label htmlFor="guildId">Guilde&nbsp;:</label>
           <select
@@ -385,7 +331,6 @@ const PlayerManagement: React.FC = () => {
             Sauvegarder les modifications
           </button>
 
-          {/* --- NEW BUTTONS HERE --- */}
           <button
             type="button"
             onClick={handleGoToFellowship}
@@ -402,7 +347,6 @@ const PlayerManagement: React.FC = () => {
           >
             Aller à la guilde
           </button>
-          {/* --- END NEW BUTTONS --- */}
 
           <button type="button" onClick={() => navigate('/')} className="button-secondary">
             Retour à l'accueil
