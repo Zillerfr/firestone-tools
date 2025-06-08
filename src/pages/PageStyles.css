@@ -349,15 +349,6 @@
     text-decoration: none;
 }
 
-/* Generic container for data sections */
-Absolument ! Je comprends tout à fait que le fond presque blanc pour les zones d'export et d'import puisse être désagréable. Repassons entièrement les couleurs pour qu'elles soient plus douces et harmonieuses, tout en respectant l'esthétique générale de votre application.
-
-Nous allons viser des teintes plus sombres et des contrastes plus marqués pour améliorer la lisibilité et le confort visuel.
-Refonte des Couleurs pour la Page Import/Export
-
-Voici les modifications à apporter à votre fichier src/PageStyles.css pour un rendu plus agréable des sections d'export et d'import. Les modifications dans le fichier DataManagement.tsx ne sont pas nécessaires pour ce changement de style, car nous nous concentrons uniquement sur le CSS.
-CSS
-
 /* src/PageStyles.css */
 
 /* Styles généraux des pages - existants, inclus pour contexte */
