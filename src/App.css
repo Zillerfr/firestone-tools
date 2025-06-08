@@ -23,7 +23,6 @@ body {
 /* Les styles de positionnement et de taille du header doivent être dans Header.css */
 .app-header {
   background-color: #20232a;
-  padding: 15px 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   /* display: flex; /* Cette propriété est mieux gérée par Header.css pour la nav interne */
   /* justify-content: center; */
@@ -53,7 +52,6 @@ main {
 /* Styles pour les autres pages (alignées en haut, sous le header) */
 .main-content-top {
   align-items: flex-start;
-  /* Le padding-top doit compenser la hauteur du header si celui-ci est fixed */
-  padding-top: calc(var(--header-height, 60px) + 20px); /* Utilisons une variable CSS pour plus de robustesse */
+  padding-top: 20px;
   padding-bottom: 20px;
 }
