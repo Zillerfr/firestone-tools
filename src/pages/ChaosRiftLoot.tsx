@@ -283,7 +283,6 @@ const ChaosRiftLoot: React.FC = () => {
 
     const distributeRemainder = <T extends PlayerLoot>(
         playersArray: T[],
-        resourceKey: 'tokens' | 'dust' | 'contracts' | 'tomes',
         allocatedKey: 'allocatedTokens' | 'allocatedDust' | 'allocatedContracts' | 'allocatedTomes',
         rawKey: 'rawTokens' | 'rawDust' | 'rawContracts' | 'rawTomes',
         remainder: number
@@ -322,10 +321,10 @@ const ChaosRiftLoot: React.FC = () => {
         return resultPlayers;
     };
 
-    tempPlayers = distributeRemainder(tempPlayers, 'tokens', 'allocatedTokens', 'rawTokens', remainingTokens);
-    tempPlayers = distributeRemainder(tempPlayers, 'dust', 'allocatedDust', 'rawDust', remainingDust);
-    tempPlayers = distributeRemainder(tempPlayers, 'contracts', 'allocatedContracts', 'rawContracts', remainingContracts);
-    tempPlayers = distributeRemainder(tempPlayers, 'tomes', 'allocatedTomes', 'rawTomes', remainingTomes);
+    tempPlayers = distributeRemainder(tempPlayers, 'allocatedTokens', 'rawTokens', remainingTokens);
+    tempPlayers = distributeRemainder(tempPlayers, 'allocatedDust', 'rawDust', remainingDust);
+    tempPlayers = distributeRemainder(tempPlayers, 'allocatedContracts', 'rawContracts', remainingContracts);
+    tempPlayers = distributeRemainder(tempPlayers, 'allocatedTomes', 'rawTomes', remainingTomes);
 
     setPlayers(tempPlayers);
   }, [players, distributionRate, monthlyRewards]);
