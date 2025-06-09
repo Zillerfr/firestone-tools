@@ -40,12 +40,11 @@ const MainContentWrapper: React.FC = () => {
 const App: React.FC = () => {
   const [selectedGuildId, setSelectedGuildId] = useState<string | null>(null);
   const [selectedFellowshipId, setSelectedFellowshipId] = useState<string | null>(null);
-  const basename = process.env.NODE_ENV === 'production' ? '/firestone-tools/' : '';
 
   return (
     <GuildContext.Provider value={{ selectedGuildId, setSelectedGuildId }}>
       <FellowshipContext.Provider value={{ selectedFellowshipId, setSelectedFellowshipId }}>
-          <Router basename={basename}>
+          <Router>
             <Header />
             <MainContentWrapper />
             <Footer />
