@@ -4,8 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { guildService } from '../services/guildService';
 import { playerService } from '../services/playerService';
 import type { Player } from '../types/data';
-import './PageStyles.css'; // Styles généraux de la page
-import './ChaosRiftLoot.css'; // Styles spécifiques à cette page
+import './PageStyles.css';
+import './ChaosRiftLoot.css';
 
 interface LootRewards {
   tokens: number;
@@ -14,19 +14,27 @@ interface LootRewards {
   tomes: number;
 }
 
-// MISE À JOUR : Étendre l'interface PlayerLoot pour inclure les propriétés brutes
 interface PlayerLoot extends Player {
   participation: number; // En pourcentage, de 0.0 à 100.0
   allocatedTokens: number;
   allocatedDust: number;
   allocatedContracts: number;
   allocatedTomes: number;
-  // NOUVEAU : Propriétés pour stocker les valeurs flottantes avant arrondi et pour le tri
   rawTokens: number;
   rawDust: number;
   rawContracts: number;
   rawTomes: number;
 }
+
+// Nouvelle interface pour les données stockées dans le localStorage
+interface GuildLootData {
+  distributionRate: number;
+  monthlyRewards: LootRewards;
+  playersParticipation: { [playerId: string]: number };
+}
+
+// Clé de stockage dans le localStorage
+const LOCAL_STORAGE_KEY = 'firestone_tools.loots';
 
 const ChaosRiftLoot: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
@@ -37,9 +45,7 @@ const ChaosRiftLoot: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // distributionRate représente le pourcentage de la part FIXE
-  const [distributionRate, setDistributionRate] = useState<number>(34); // Curseur de 0 à 100
-
+  const [distributionRate, setDistributionRate] = useState<number>(34); // Par défaut à 34%
   const [monthlyRewards, setMonthlyRewards] = useState<LootRewards>({
     tokens: 0,
     dust: 0,
@@ -47,11 +53,40 @@ const ChaosRiftLoot: React.FC = () => {
     tomes: 0,
   });
 
-  // État local pour gérer la valeur de l'input de participation pendant la saisie
   const [localParticipationInput, setLocalParticipationInput] = useState<Record<string, string>>({});
 
+  // Fonction utilitaire pour charger les données du localStorage
+  const loadLootDataFromLocalStorage = useCallback((currentGuildId: string): GuildLootData | null => {
+    try {
+      const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedData) {
+        const parsedData: { [guildId: string]: GuildLootData } = JSON.parse(storedData);
+        return parsedData[currentGuildId] || null;
+      }
+    } catch (e) {
+      console.error("Erreur lors du chargement des données du localStorage :", e);
+    }
+    return null;
+  }, []);
 
-  // --- Chargement des données initiales ---
+  // Fonction utilitaire pour sauvegarder les données dans le localStorage
+  const saveLootDataToLocalStorage = useCallback((data: GuildLootData) => {
+    if (!guildId) return; // Ne pas sauvegarder si pas de guilde
+
+    try {
+      const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const allLootData: { [guildId: string]: GuildLootData } = storedData ? JSON.parse(storedData) : {};
+
+      allLootData[guildId] = data; // Met à jour ou ajoute les données de la guilde actuelle
+
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allLootData));
+    } catch (e) {
+      console.error("Erreur lors de la sauvegarde des données dans le localStorage :", e);
+    }
+  }, [guildId]);
+
+
+  // --- Chargement des données initiales (incluant localStorage) ---
   const loadGuildAndPlayers = useCallback(async () => {
     if (!guildId) {
       setError('ID de guilde manquant dans l\'URL.');
@@ -62,27 +97,40 @@ const ChaosRiftLoot: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+
       const guild = await guildService.getGuildById(guildId);
       if (guild) {
         setGuildName(guild.name);
         const fetchedPlayers = await playerService.getPlayersByGuildId(guildId);
 
-        // Initialise la participation et les propriétés raw/allocated pour tous les joueurs
-        const playersWithLoot: PlayerLoot[] = fetchedPlayers.map(p => ({
-          ...p,
-          participation: 0.0, // Initialisation par défaut
-          allocatedTokens: 0,
-          allocatedDust: 0,
-          allocatedContracts: 0,
-          allocatedTomes: 0,
-          rawTokens: 0, // Initialisation des rawKeys
-          rawDust: 0,
-          rawContracts: 0,
-          rawTomes: 0,
-        })).sort((a, b) => a.name.localeCompare(b.name)); // Trier par nom
+        // Charger les données sauvegardées pour cette guilde
+        const savedData = loadLootDataFromLocalStorage(guildId);
+
+        const playersWithLoot: PlayerLoot[] = fetchedPlayers.map(p => {
+          const participation = savedData?.playersParticipation[p.id] !== undefined
+            ? savedData.playersParticipation[p.id]
+            : 0.0; // Par défaut à 0.0 si non trouvé ou pas sauvegardé
+
+          return {
+            ...p,
+            participation: participation,
+            allocatedTokens: 0,
+            allocatedDust: 0,
+            allocatedContracts: 0,
+            allocatedTomes: 0,
+            rawTokens: 0,
+            rawDust: 0,
+            rawContracts: 0,
+            rawTomes: 0,
+          };
+        }).sort((a, b) => a.name.localeCompare(b.name));
         setPlayers(playersWithLoot);
 
-        // Initialiser l'état local des inputs pour qu'ils affichent la valeur par défaut formatée
+        // Mettre à jour les états avec les données chargées ou les valeurs par défaut
+        setDistributionRate(savedData?.distributionRate !== undefined ? savedData.distributionRate : 34);
+        setMonthlyRewards(savedData?.monthlyRewards || { tokens: 0, dust: 0, contracts: 0, tomes: 0 });
+
+        // Initialiser l'état local des inputs avec les valeurs chargées ou par défaut formatées
         const initialLocalInputs: Record<string, string> = {};
         playersWithLoot.forEach(p => {
           initialLocalInputs[p.id] = p.participation.toFixed(1).replace('.', ',');
@@ -93,7 +141,7 @@ const ChaosRiftLoot: React.FC = () => {
         setError('Guilde introuvable.');
         setGuildName(null);
         setPlayers([]);
-        setLocalParticipationInput({}); // Réinitialiser l'état local des inputs aussi
+        setLocalParticipationInput({});
       }
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
@@ -101,61 +149,68 @@ const ChaosRiftLoot: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [guildId]);
+  }, [guildId, loadLootDataFromLocalStorage]);
 
   useEffect(() => {
     loadGuildAndPlayers();
   }, [loadGuildAndPlayers]);
 
+  // --- Sauvegarde des données quand les états changent ---
+  useEffect(() => {
+    if (!guildId || players.length === 0) return; // N'enregistre pas si pas de guilde ou de joueurs
+
+    // Collecter les participations des joueurs
+    const playersParticipation: { [playerId: string]: number } = {};
+    players.forEach(p => {
+      playersParticipation[p.id] = p.participation;
+    });
+
+    const dataToSave: GuildLootData = {
+      distributionRate,
+      monthlyRewards,
+      playersParticipation,
+    };
+    saveLootDataToLocalStorage(dataToSave);
+  }, [distributionRate, monthlyRewards, players, guildId, saveLootDataToLocalStorage]);
+
 
   // --- Gestion de la saisie de participation ---
-
-  // Sélectionne tout le texte dans l'input quand il prend le focus
   const handleInputFocus = (event: React.FocusEvent<HTMLInputElement>) => {
     event.target.select();
   };
 
-  // Met à jour la valeur de l'input localement pendant que l'utilisateur tape
   const handleLocalParticipationChange = (playerId: string, value: string) => {
-    // Permet la saisie de ',' ou '.' comme séparateur décimal
     const cleanedValue = value.replace(',', '.');
-
-    // Autorise une chaîne vide, un nombre entier ou décimal (y compris avec un point final)
     const isValidInputFormat = /^\d*\.?\d*$/.test(cleanedValue) || cleanedValue === '';
 
     if (!isValidInputFormat) {
-      // Si l'entrée n'est pas un format valide (ex: contient des lettres), ne rien faire
       return;
     }
 
     setLocalParticipationInput(prev => ({
       ...prev,
-      [playerId]: value, // Stocke la valeur brute de l'input (avec ',' ou '.')
+      [playerId]: value,
     }));
   };
 
-  // Valide et stocke la valeur finale dans l'état global lorsque l'input perd le focus
   const handleParticipationBlur = (playerId: string, value: string) => {
     const cleanedValue = value.replace(',', '.');
     let numValue = parseFloat(cleanedValue);
 
-    // Si la valeur est NaN (ex: chaîne vide ou juste "."), la traiter comme 0
     if (isNaN(numValue) || cleanedValue === '' || cleanedValue === '.') {
       numValue = 0;
     }
 
-    // Limiter la valeur entre 0.0 et 100.0
     const finalValue = Math.max(0, Math.min(100, numValue));
 
     setPlayers(prevPlayers =>
       prevPlayers.map(player =>
         player.id === playerId
-          ? { ...player, participation: finalValue } // Met à jour la valeur numérique réelle
+          ? { ...player, participation: finalValue }
           : player
       )
     );
 
-    // Mettre à jour l'état local de l'input avec la valeur formatée finale (ex: 2.0 -> 2,0)
     setLocalParticipationInput(prev => ({
       ...prev,
       [playerId]: finalValue.toFixed(1).replace('.', ','),
@@ -168,28 +223,24 @@ const ChaosRiftLoot: React.FC = () => {
     const numValue = parseInt(value, 10);
     setMonthlyRewards(prevRewards => ({
       ...prevRewards,
-      [key]: isNaN(numValue) ? 0 : Math.max(0, numValue), // Assure que c'est un nombre positif
+      [key]: isNaN(numValue) ? 0 : Math.max(0, numValue),
     }));
   };
 
-  // --- Logique de calcul ---
+  // --- Logique de calcul (inchangée) ---
   const calculateLootDistribution = useCallback(() => {
     const totalParticipation = players.reduce((sum, p) => sum + p.participation, 0);
     const numPlayers = players.length;
 
-    // distributionRate est le pourcentage de la part FIXE
     const fixedRate = distributionRate / 100;
-    // prorataRate est le pourcentage de la part PRORATA
     const prorataRate = (100 - distributionRate) / 100;
 
-    // Étape 1: Calculer les parts initiales (brutes et allouées à l'entier inférieur)
     let tempPlayers: PlayerLoot[] = players.map(player => {
       let tokensCalculated = 0;
       let dustCalculated = 0;
       let contractsCalculated = 0;
       let tomesCalculated = 0;
 
-      // Calcul de la part "Fixe"
       const fixedSharePerPlayer = numPlayers > 0
         ? {
             tokens: (monthlyRewards.tokens * fixedRate) / numPlayers,
@@ -199,7 +250,6 @@ const ChaosRiftLoot: React.FC = () => {
           }
         : { tokens: 0, dust: 0, contracts: 0, tomes: 0 };
 
-      // Calcul de la part "Prorata"
       if (totalParticipation > 0 && player.participation > 0) {
         const playerRatio = player.participation / totalParticipation;
         tokensCalculated = (monthlyRewards.tokens * prorataRate * playerRatio);
@@ -215,64 +265,56 @@ const ChaosRiftLoot: React.FC = () => {
 
       return {
         ...player,
-        rawTokens: totalTokens, // Stocker les valeurs flottantes pour le calcul des décimales
+        rawTokens: totalTokens,
         rawDust: totalDust,
         rawContracts: totalContracts,
         rawTomes: totalTomes,
-        allocatedTokens: Math.floor(totalTokens), // Allocation initiale à l'entier inférieur
+        allocatedTokens: Math.floor(totalTokens),
         allocatedDust: Math.floor(totalDust),
         allocatedContracts: Math.floor(totalContracts),
         allocatedTomes: Math.floor(totalTomes),
       };
     });
 
-    // Étape 2: Calculer les restes globaux pour chaque ressource
     const remainingTokens = monthlyRewards.tokens - tempPlayers.reduce((sum, p) => sum + p.allocatedTokens, 0);
     const remainingDust = monthlyRewards.dust - tempPlayers.reduce((sum, p) => sum + p.allocatedDust, 0);
     const remainingContracts = monthlyRewards.contracts - tempPlayers.reduce((sum, p) => sum + p.allocatedContracts, 0);
     const remainingTomes = monthlyRewards.tomes - tempPlayers.reduce((sum, p) => sum + p.allocatedTomes, 0);
 
-    // Étape 3: Fonction pour distribuer les restes un par un
-    // Utilise un type générique TPlayer qui étend PlayerLoot pour s'assurer que rawKey est accessible
     const distributeRemainder = <T extends PlayerLoot>(
         playersArray: T[],
+        resourceKey: 'tokens' | 'dust' | 'contracts' | 'tomes',
         allocatedKey: 'allocatedTokens' | 'allocatedDust' | 'allocatedContracts' | 'allocatedTomes',
         rawKey: 'rawTokens' | 'rawDust' | 'rawContracts' | 'rawTomes',
         remainder: number
     ): T[] => {
         if (remainder <= 0) return playersArray;
 
-        // Créer une copie triable des joueurs
-        // Trier par la partie décimale décroissante (plus grande décimale d'abord)
-        // En cas d'égalité de décimale, trier par participation décroissante (plus grande participation d'abord)
         const sortedPlayers = [...playersArray].sort((a, b) => {
             const decimalA = a[rawKey] - Math.floor(a[rawKey]);
             const decimalB = b[rawKey] - Math.floor(b[rawKey]);
 
             if (decimalB !== decimalA) {
-                return decimalB - decimalA; // Décimale la plus grande en premier
+                return decimalB - decimalA;
             }
-            return b.participation - a.participation; // Puis participation la plus grande
+            return b.participation - a.participation;
         });
 
         let currentRemainder = remainder;
         let playerIndex = 0;
-        // Créer une nouvelle copie du tableau pour les modifications afin d'éviter les mutations directes de l'état original
-        const resultPlayers: T[] = [...playersArray]; 
+        const resultPlayers: T[] = [...playersArray];
 
         while (currentRemainder > 0 && playerIndex < sortedPlayers.length) {
             const playerToGive = sortedPlayers[playerIndex];
             
-            // Trouver l'index original du joueur dans `resultPlayers` pour modifier la bonne référence
             const playerInResult = resultPlayers.find(p => p.id === playerToGive.id);
             
             if (playerInResult) {
-                playerInResult[allocatedKey] += 1; // Donne 1 élément au joueur
+                playerInResult[allocatedKey] += 1;
                 currentRemainder--;
             }
             
             playerIndex++;
-            // Si on a parcouru tous les joueurs et qu'il reste des éléments, on reprend du début
             if (playerIndex >= sortedPlayers.length && currentRemainder > 0) {
                 playerIndex = 0;
             }
@@ -280,15 +322,13 @@ const ChaosRiftLoot: React.FC = () => {
         return resultPlayers;
     };
 
-    // Étape 4: Distribuer les restes pour chaque ressource
-    tempPlayers = distributeRemainder(tempPlayers, 'allocatedTokens', 'rawTokens', remainingTokens);
-    tempPlayers = distributeRemainder(tempPlayers, 'allocatedDust', 'rawDust', remainingDust);
-    tempPlayers = distributeRemainder(tempPlayers, 'allocatedContracts', 'rawContracts', remainingContracts);
-    tempPlayers = distributeRemainder(tempPlayers, 'allocatedTomes', 'rawTomes', remainingTomes);
+    tempPlayers = distributeRemainder(tempPlayers, 'tokens', 'allocatedTokens', 'rawTokens', remainingTokens);
+    tempPlayers = distributeRemainder(tempPlayers, 'dust', 'allocatedDust', 'rawDust', remainingDust);
+    tempPlayers = distributeRemainder(tempPlayers, 'contracts', 'allocatedContracts', 'rawContracts', remainingContracts);
+    tempPlayers = distributeRemainder(tempPlayers, 'tomes', 'allocatedTomes', 'rawTomes', remainingTomes);
 
-    setPlayers(tempPlayers); // Met à jour l'état global avec les joueurs dont les loots sont alloués
-  }, [players, distributionRate, monthlyRewards]); // Dépend de players pour le tri initial
-
+    setPlayers(tempPlayers);
+  }, [players, distributionRate, monthlyRewards]);
 
   // --- Totaux pour la dernière ligne du tableau ---
   const totals = useMemo(() => {
@@ -298,13 +338,60 @@ const ChaosRiftLoot: React.FC = () => {
         dust: acc.dust + player.allocatedDust,
         contracts: acc.contracts + player.allocatedContracts,
         tomes: acc.tomes + player.allocatedTomes,
-        // AJOUT : Somme des participations pour la ligne de total
         totalParticipation: acc.totalParticipation + player.participation,
       }),
-      // Initialiser totalParticipation à 0 dans l'accumulateur
       { tokens: 0, dust: 0, contracts: 0, tomes: 0, totalParticipation: 0 }
     );
   }, [players]);
+
+
+  // --- Fonction de Réinitialisation ---
+  const handleReset = useCallback(() => {
+    if (!guildId) return;
+
+    setDistributionRate(34);
+    setMonthlyRewards({
+      tokens: 0,
+      dust: 0,
+      contracts: 0,
+      tomes: 0,
+    });
+
+    setPlayers(prevPlayers => {
+      const resetPlayers = prevPlayers.map(player => ({
+        ...player,
+        participation: 0.0,
+        allocatedTokens: 0,
+        allocatedDust: 0,
+        allocatedContracts: 0,
+        allocatedTomes: 0,
+        rawTokens: 0,
+        rawDust: 0,
+        rawContracts: 0,
+        rawTomes: 0,
+      }));
+
+      const initialLocalInputs: Record<string, string> = {};
+      resetPlayers.forEach(p => {
+        initialLocalInputs[p.id] = '0,0';
+      });
+      setLocalParticipationInput(initialLocalInputs);
+
+      return resetPlayers;
+    });
+
+    try {
+      const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedData) {
+        const allLootData: { [guildId: string]: GuildLootData } = JSON.parse(storedData);
+        delete allLootData[guildId];
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allLootData));
+      }
+    } catch (e) {
+      console.error("Erreur lors de la suppression des données du localStorage :", e);
+    }
+  }, [guildId]);
+
 
   // --- Affichage des messages de chargement/erreur ---
   if (loading) {
@@ -328,25 +415,35 @@ const ChaosRiftLoot: React.FC = () => {
 
   return (
     <div className="page-container">
-      <div className="entity-header-row">
+      {/* Modification ici: utilisation de display: flex et justify-content: space-between */}
+      <div className="entity-header-row header-with-reset-button">
         <h2 className="entity-title">{guildName} : distribution des loots de la Faille du Chaos</h2>
-        <div className="distribution-control-full-width">
-          <div className="distribution-slider-row">
-            <span className="rate-display-label">Taux de répartition :</span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={distributionRate}
-              onChange={(e) => setDistributionRate(parseInt(e.target.value, 10))}
-              className="slider"
-            />
-            {/* Affichage corrigé du taux de répartition */}
-            <span className="rate-value-display">
-              {distributionRate}% Fixe / {100 - distributionRate}% Prorata
-            </span>
-          </div>
+        {/* BOUTON DE RÉINITIALISATION DÉPLACÉ ICI */}
+        <button
+          onClick={handleReset}
+          className="button-danger reset-button"
+          title="Réinitialiser tous les champs de saisie et la répartition"
+        >
+          Réinitialisation
+        </button>
+      </div>
+
+      <div className="distribution-control-full-width">
+
+        <div className="distribution-slider-row">
+          <span className="rate-display-label">Taux de répartition :</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={distributionRate}
+            onChange={(e) => setDistributionRate(parseInt(e.target.value, 10))}
+            className="slider"
+          />
+          <span className="rate-value-display">
+            {distributionRate}% Fixe / {100 - distributionRate}% Prorata
+          </span>
         </div>
       </div>
 
@@ -425,7 +522,6 @@ const ChaosRiftLoot: React.FC = () => {
                   <td>
                     <input
                       type="text"
-                      // Affiche la valeur de l'état local de l'input, non pas la valeur numérique directe
                       value={localParticipationInput[player.id] || ''}
                       onChange={(e) => handleLocalParticipationChange(player.id, e.target.value)}
                       onFocus={handleInputFocus}
@@ -444,7 +540,6 @@ const ChaosRiftLoot: React.FC = () => {
               ))}
               <tr className="total-row">
                 <td>Total</td>
-                {/* AFFICHAGE DE LA SOMME DES PARTICIPATIONS */}
                 <td>{totals.totalParticipation.toFixed(1).replace('.', ',')}</td>
                 <td>{totals.tokens}</td>
                 <td>{totals.dust}</td>
