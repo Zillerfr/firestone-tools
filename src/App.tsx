@@ -12,6 +12,7 @@ import { GuildContext } from './contexts/GuildContext';
 import { FellowshipContext } from './contexts/FellowshipContext';
 import Footer from './components/Footer';
 import DataManagement from './pages/DataManagement';
+import ChaosRiftLoot from './pages/ChaosRiftLoot';
 
 // Nouveau composant interne pour gérer la classe de main
 const MainContentWrapper: React.FC = () => {
@@ -29,6 +30,7 @@ const MainContentWrapper: React.FC = () => {
         <Route path="/player-management" element={<PlayerManagement />} />
         <Route path="/account-management" element={<AccountManagement />} />
         <Route path="/data-management" element={<DataManagement />} />
+        <Route path="/chaos-rift-loot/:guildId" element={<ChaosRiftLoot />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </main>

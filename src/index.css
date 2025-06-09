@@ -69,3 +69,34 @@ button:focus-visible {
 #root {
   width: 100%;
 }
+
+:root {
+    /* Couleurs principales et de texte */
+    --color-primary: #87ceeb;          /* Bleu ciel doux pour les titres et accents */
+    --color-text-dark: #e0e0e0;        /* Texte clair pour les fonds sombres */
+    --color-text-light: #ffffff;       /* Blanc pur pour le contraste sur les éléments très sombres */
+    --color-border: #444444;           /* Bordures sombres */
+
+    /* Couleurs de fond sombres */
+    --color-background-page: #282c34;  /* Fond de page général très sombre (gris anthracite) */
+    --color-background-card: #3a3f47;  /* Fond des sections/cartes (gris un peu plus clair que la page) */
+    --color-input-bg: #4c525c;         /* Fond des champs de saisie (gris moyen) */
+    --color-header-bg: #4c525c;        /* Fond d'en-tête de tableau (idem input-bg) */
+    --color-header-bg-hover: #5a606b;  /* Fond d'en-tête de tableau au survol */
+
+    /* Couleurs des boutons et accents */
+    --color-accent: #2b62f8;           /* Cyan clair pour les accents/boutons primaires */
+    --color-accent-dark: #1b2af5;      /* Cyan plus foncé au survol */
+    --color-delete: #e74c3c;           /* Rouge pour les actions de suppression */
+    --color-delete-dark: #c0392b;
+    --color-edit: #f1c40f;             /* Jaune pour les actions de modification */
+    --color-edit-dark: #e6b100;
+
+    /* Couleurs des liens */
+    --color-link: #87ceeb;             /* Bleu ciel pour les liens */
+    --color-link-hover: #61dafb;       /* Cyan au survol des liens */
+
+    /* Ombres (plus subtiles sur un fond sombre) */
+    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.6);
+}

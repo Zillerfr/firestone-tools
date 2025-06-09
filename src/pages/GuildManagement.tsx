@@ -27,13 +27,11 @@ const GuildManagement: React.FC = () => {
   const [isRemovePlayerModalOpen, setIsRemovePlayerModalOpen] = useState<boolean>(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const [isPlayerCreationModalOpen, setIsPlayerCreationModalOpen] = useState<boolean>(false);
-  // NOUVEL ÉTAT : Pour stocker le joueur à modifier
   const [playerToEdit, setPlayerToEdit] = useState<Player | null>(null);
 
   // --- Data Loading ---
 
   // Effect to load all guilds and fellowships once on component mount
-  // This runs first and populates allGuilds and allFellowships
   useEffect(() => {
     const loadGlobalAssociations = async () => {
       try {
@@ -42,18 +40,17 @@ const GuildManagement: React.FC = () => {
 
         const fetchedFellowships = await fellowshipService.getAllFellowships();
         setAllFellowships(fetchedFellowships);
-        // console.log('loadGlobalAssociations: Guilds and Fellowships loaded.'); // Debug log
       } catch (err) {
         console.error('Erreur lors du chargement des guildes/confréries initiales:', err);
       }
     };
     loadGlobalAssociations();
-  }, []); // Empty dependency array means it runs once on mount
+  }, []);
 
   // Effect to fetch guild details and players based on guildId
   const fetchGuildAndPlayers = useCallback(async () => {
-    setLoading(true); // Start loading
-    setError(null); // Clear previous errors
+    setLoading(true);
+    setError(null);
 
     try {
       if (guildId) {
@@ -64,7 +61,6 @@ const GuildManagement: React.FC = () => {
 
           const playersWithFellowshipNames = fetchedPlayers.map(player => ({
             ...player,
-            // Ensure allFellowships is available before trying to find
             fellowship: allFellowships.find(f => f.id === player.fellowshipId) || null
           }));
           setPlayers(playersWithFellowshipNames);
@@ -81,14 +77,12 @@ const GuildManagement: React.FC = () => {
           setAvailablePlayers(Array.from(availablePlayerMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
 
         } else {
-          // Guild ID in URL, but guild not found
           setGuildName(null);
           setPlayers([]);
-          setAvailablePlayers(await playerService.getAllPlayers()); // All players are available if no guild is selected/found
+          setAvailablePlayers(await playerService.getAllPlayers());
           setError('La guilde sélectionnée n\'existe pas. Veuillez en créer une ou en choisir une autre.');
         }
       } else {
-        // No guildId in URL (e.g., /guild-management/)
         setGuildName(null);
         setPlayers([]);
         setAvailablePlayers(await playerService.getAllPlayers());
@@ -97,20 +91,16 @@ const GuildManagement: React.FC = () => {
     } catch (err) {
       console.error('Erreur lors de la récupération des données:', err);
       setError('Impossible de charger les détails. Veuillez réessayer.');
-      setGuildName(null); // Reset guild name on error
+      setGuildName(null);
       setPlayers([]);
       setAvailablePlayers([]);
     } finally {
-      setLoading(false); // End loading regardless of success or error
-      setSelectedPlayerToAdd(''); // Reset selection
+      setLoading(false);
+      setSelectedPlayerToAdd('');
     }
-  }, [guildId, allFellowships]); // Depend on guildId and allFellowships
+  }, [guildId, allFellowships]);
 
-  // This effect triggers the main data fetch.
-  // It runs whenever guildId changes, or initially.
-  // We removed allFellowships.length from dependencies here, as fetchGuildAndPlayers can handle empty allFellowships now.
   useEffect(() => {
-    // console.log('Trigger useEffect for fetchGuildAndPlayers. guildId:', guildId, 'allFellowships.length:', allFellowships.length); // Debug log
     fetchGuildAndPlayers();
   }, [fetchGuildAndPlayers, guildId]);
 
@@ -137,12 +127,11 @@ const GuildManagement: React.FC = () => {
     }
   };
 
-  // MODIFICATION ICI : Ouvrir la modale avec les données du joueur
   const handleEditPlayer = (playerId: string) => {
     const player = players.find(p => p.id === playerId);
     if (player) {
-      setPlayerToEdit(player); // Stocker le joueur à modifier
-      setIsPlayerCreationModalOpen(true); // Ouvrir la modale
+      setPlayerToEdit(player);
+      setIsPlayerCreationModalOpen(true);
     }
   };
 
@@ -175,7 +164,7 @@ const GuildManagement: React.FC = () => {
 
   const handleAddPlayer = async () => {
     if (selectedPlayerToAdd === 'create-new-player') {
-      setPlayerToEdit(null); // S'assurer qu'il n'y a pas de joueur à modifier pour une création
+      setPlayerToEdit(null);
       setIsPlayerCreationModalOpen(true);
     } else if (selectedPlayerToAdd && guildId) {
       try {
@@ -194,12 +183,11 @@ const GuildManagement: React.FC = () => {
     }
   };
 
-  // MODIFICATION ICI : Gérer la création ET la mise à jour du joueur
   const handlePlayerOperationCompleted = async (player: Player) => {
     console.log(`Opération sur le joueur ${player.name} terminée.`);
     setIsPlayerCreationModalOpen(false);
-    setPlayerToEdit(null); // Réinitialiser le joueur à modifier
-    await fetchGuildAndPlayers(); // Rafraîchir les données
+    setPlayerToEdit(null);
+    await fetchGuildAndPlayers();
   };
 
   const handleGuildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -209,19 +197,25 @@ const GuildManagement: React.FC = () => {
     }
   };
 
-  // Nouvelle fonction pour naviguer vers la page de gestion de confrérie
   const handleViewFellowship = (fellowshipId: string) => {
     navigate(`/fellowship-management/${fellowshipId}`);
   };
 
+  // NOUVEAU : Fonction pour naviguer vers la page de répartition des loots
+  const handleNavigateToChaosRiftLoot = () => {
+    if (guildId) {
+      navigate(`/chaos-rift-loot/${guildId}`);
+    } else {
+      setError('Veuillez sélectionner une guilde avant de répartir les loots.');
+    }
+  };
+
   // --- Rendering Logic ---
 
-  // 1. Initial loading check: Show loading message only if data is actively being fetched.
   if (loading) {
     return <p className="loading-message">Chargement des détails de la guilde et de ses joueurs...</p>;
   }
 
-  // 2. Case: No guild selected or guild not found after loading
   if (!guildId || guildName === null) {
     return (
       <div className="page-container">
@@ -274,16 +268,15 @@ const GuildManagement: React.FC = () => {
         </div>
         <PlayerCreationModal
           isOpen={isPlayerCreationModalOpen}
-          onClose={() => { setIsPlayerCreationModalOpen(false); setPlayerToEdit(null); }} // Réinitialiser playerToEdit à la fermeture
-          onCreate={handlePlayerOperationCompleted} // Renommé pour englober création et update
+          onClose={() => { setIsPlayerCreationModalOpen(false); setPlayerToEdit(null); }}
+          onCreate={handlePlayerOperationCompleted}
           initialGuildId={guildId}
-          playerToEdit={playerToEdit} // PASSER le joueur à modifier
+          playerToEdit={playerToEdit}
         />
       </div>
     );
   }
 
-  // 3. Normal rendering when a guild is found and loaded
   return (
     <div className="page-container">
       <>
@@ -296,7 +289,7 @@ const GuildManagement: React.FC = () => {
               className="title-select"
               aria-label="Sélectionner une autre guilde"
             >
-              {allGuilds.length === 0 ? ( // Condition simplifiée
+              {allGuilds.length === 0 ? (
                 <option value="" disabled>Chargement des guildes...</option>
               ) : (
                 <>
@@ -309,6 +302,15 @@ const GuildManagement: React.FC = () => {
               )}
             </select>
           </h2>
+          {/* NOUVEAU BOUTON : Répartir les loots */}
+          <button
+            onClick={handleNavigateToChaosRiftLoot}
+            className="button-primary" // Utilisez une classe de style appropriée
+            style={{ marginRight: '10px' }} // Petite marge pour séparer les boutons
+            title="Accéder à la page de répartition des loots de la Faille du Chaos"
+          >
+            Loots Faille du Chaos
+          </button>
           <button
             onClick={() => setIsDeleteGuildModalOpen(true)}
             className="delete-entity-button"
@@ -340,7 +342,7 @@ const GuildManagement: React.FC = () => {
                       <td>
                         {player.fellowship ? (
                           <span
-                            className="clickable-fellowship" // Appliquer un style CSS pour le rendre cliquable
+                            className="clickable-fellowship"
                             onClick={() => handleViewFellowship(player.fellowship!.id)}
                             title={`Voir la confrérie "${player.fellowship.name}"`}
                           >
@@ -352,7 +354,7 @@ const GuildManagement: React.FC = () => {
                       </td>
                       <td className="action-column">
                         <button
-                          onClick={() => handleEditPlayer(player.id)} // Le clic ici appellera la nouvelle fonction
+                          onClick={() => handleEditPlayer(player.id)}
                           className="action-button edit-button"
                           title="Modifier le joueur"
                         >
@@ -420,13 +422,12 @@ const GuildManagement: React.FC = () => {
         message={playerToRemove ? `Êtes-vous sûr de vouloir retirer "${playerToRemove.name}" de cette guilde ? Le joueur ne sera pas supprimé du jeu.` : ''}
       />
 
-      {/* MODIFICATION ICI : Passer le playerToEdit à la modale */}
       <PlayerCreationModal
         isOpen={isPlayerCreationModalOpen}
         onClose={() => { setIsPlayerCreationModalOpen(false); setPlayerToEdit(null); }}
         onCreate={handlePlayerOperationCompleted}
         initialGuildId={guildId}
-        playerToEdit={playerToEdit} // Passe le joueur à modifier
+        playerToEdit={playerToEdit}
       />
     </div>
   );

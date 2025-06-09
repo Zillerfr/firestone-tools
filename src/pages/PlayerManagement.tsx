@@ -132,7 +132,7 @@ const PlayerManagement: React.FC = () => {
     setIsPlayerModalOpen(true);
   };
 
-  const handlePlayerCreationOrUpdate = async (player: Player) => {
+  const handlePlayerCreationOrUpdate = async () => {
     setIsPlayerModalOpen(false);
     setPlayerToEdit(null);
     await loadAllData();

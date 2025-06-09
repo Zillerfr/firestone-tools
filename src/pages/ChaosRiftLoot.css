@@ -1,0 +1,168 @@
+/* src/pages/ChaosRiftLoot.css */
+
+/* Pour les sections de la page */
+.reward-input-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    /* UTILISE LA VARIABLE POUR LE FOND */
+    background-color: var(--color-background-card);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    color: var(--color-text-dark); /* S'assurer que le texte est lisible */
+}
+
+.reward-input-section h3 {
+    color: var(--color-primary);
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.reward-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+    justify-content: flex-start;
+}
+
+.reward-inputs .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 120px;
+}
+
+.reward-inputs label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--color-text-dark);
+}
+
+.reward-input {
+    padding: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 1em;
+    width: 100px;
+    box-sizing: border-box;
+    background-color: var(--color-input-bg); /* Couleur de fond pour les inputs */
+    color: var(--color-text-dark); /* Couleur du texte dans les inputs */
+}
+
+.calculate-button {
+    background-color: var(--color-accent);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.2s ease;
+}
+
+.calculate-button:hover {
+    background-color: var(--color-accent-dark);
+}
+
+/* Styles pour le curseur de répartition (nouvelle structure) */
+.distribution-control-full-width {
+    width: 100%; /* Prend toute la largeur */
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: var(--color-background-card);
+    border-radius: 8px;
+    box-shadow: var(--shadow-light); /* Utilise la variable d'ombre */
+    color: var(--color-text-dark);
+}
+
+.distribution-labels-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px; /* Espace entre les libellés du haut et le slider */
+    font-weight: bold;
+    color: var(--color-text-dark);
+}
+
+.distribution-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espace entre le libellé, le slider et la valeur */
+    flex-wrap: wrap; /* Pour s'adapter aux petits écrans */
+}
+
+.rate-display-label {
+    white-space: nowrap; /* Empêche le libellé de se casser sur plusieurs lignes */
+    font-weight: bold;
+    color: var(--color-primary); /* Utiliser la couleur primaire pour la valeur */
+}
+
+.slider {
+    flex-grow: 1; /* Le curseur prend l'espace disponible */
+    -webkit-appearance: none;
+    width: auto; /* Permet à flex-grow de gérer la largeur */
+    height: 8px;
+    background: var(--color-header-bg);
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+    border-radius: 5px;
+    margin: 0; /* Réinitialiser les marges par défaut des inputs de type range */
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    cursor: grab;
+    border: 2px solid var(--color-primary); /* Bordure blanche (ou couleur de carte) autour du thumb */
+    box-shadow: 0 0 5px rgba(0,0,0,0.3); /* Ombre plus visible sur fond sombre */
+}
+
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    cursor: grab;
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+
+.rate-value-display {
+    min-width: 150px; /* Garder une taille minimale pour l'affichage */
+    text-align: right;
+    font-weight: bold;
+    color: var(--color-primary); /* Utiliser la couleur primaire pour la valeur */
+    white-space: nowrap; /* Empêche le texte de se casser */
+}
+
+
+/* Styles pour le tableau */
+.data-table .participation-input {
+    width: 80px;
+    padding: 6px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.9em;
+    text-align: right;
+    background-color: var(--color-input-bg); /* Couleur de fond pour les inputs */
+    color: var(--color-text-dark); /* Couleur du texte dans les inputs */
+}
+
+.data-table .total-row {
+    font-weight: bold;
+    background-color: var(--color-header-bg);
+    color: var(--color-text-dark);
+}
+
+.data-table .total-row td {
+    border-top: 2px solid var(--color-primary);
+}
