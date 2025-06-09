@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="app-footer">
       <div className="footer-content">
-        <span className="footer-text">Firestone Tools v0.10 (c) XenobiaMegami</span>
+        <span className="footer-text">Firestone Tools v0.11 (c) XenobiaMegami</span>
         <Link to="/data-management" className="footer-link">
           Import / Export
         </Link>

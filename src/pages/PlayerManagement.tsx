@@ -1,5 +1,6 @@
 // src/pages/PlayerManagement.tsx
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; // Seulement useNavigate, plus besoin de Link
 import { playerService } from '../services/playerService';
 import { guildService } from '../services/guildService';
 import { fellowshipService } from '../services/fellowshipService';
@@ -8,10 +9,11 @@ import PlayerCreationModal from '../components/PlayerCreationModal';
 import type { Guild, Fellowship, Player } from '../types/data';
 import './PageStyles.css';
 
-type SortKey = keyof Player | 'guildName' | 'fellowshipName'; // Ajoutez les noms de guilde/confrérie pour le tri
+type SortKey = keyof Player | 'guildName' | 'fellowshipName';
 type SortDirection = 'asc' | 'desc';
 
 const PlayerManagement: React.FC = () => {
+  const navigate = useNavigate();
 
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [guilds, setGuilds] = useState<Guild[]>([]);
@@ -27,7 +29,6 @@ const PlayerManagement: React.FC = () => {
 
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection } | null>(null);
 
-  // Fonction pour charger toutes les données nécessaires
   const loadAllData = useCallback(async () => {
     try {
       setLoading(true);
@@ -37,7 +38,7 @@ const PlayerManagement: React.FC = () => {
         guildService.getAllGuilds(),
         fellowshipService.getAllFellowships(),
       ]);
-      setAllPlayers(fetchedPlayers); // Ne pas trier ici, le tri sera géré par la fonction sort
+      setAllPlayers(fetchedPlayers);
       setGuilds(fetchedGuilds);
       setFellowships(fetchedFellowships);
     } catch (err) {
@@ -48,12 +49,10 @@ const PlayerManagement: React.FC = () => {
     }
   }, []);
 
-  // Charger les données au montage du composant
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
 
-  // Fonction utilitaire pour obtenir le nom de la guilde/confrérie par ID
   const getGuildName = (guildId: string | null) => {
     if (!guildId) return 'N/A';
     const guild = guilds.find(g => g.id === guildId);
@@ -66,13 +65,11 @@ const PlayerManagement: React.FC = () => {
     return fellowship ? fellowship.name : 'Inconnue';
   };
 
-  // Formattage des nombres pour l'affichage
   const formatNumberForDisplay = useCallback((num: number): string => {
     if (num === null || isNaN(num)) return '0';
     return num.toLocaleString(undefined, { maximumFractionDigits: 0 });
   }, []);
 
-  // Logique de tri
   const sortedPlayers = React.useMemo(() => {
     let sortableItems = [...allPlayers];
     if (sortConfig !== null) {
@@ -101,7 +98,6 @@ const PlayerManagement: React.FC = () => {
             ? aValue - bValue
             : bValue - aValue;
         }
-        // Gérer les nulls/undefineds en les plaçant à la fin en fonction du tri
         if (aValue === null || aValue === undefined) return sortConfig.direction === 'asc' ? 1 : -1;
         if (bValue === null || bValue === undefined) return sortConfig.direction === 'asc' ? -1 : 1;
 
@@ -119,34 +115,29 @@ const PlayerManagement: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  // Modification ici: Ne retourne que le caractère, le positionnement est fait en CSS
   const getSortIndicator = (key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) {
-      return '-'; // Signe "-" si non trié
+      return '-';
     }
     return sortConfig.direction === 'asc' ? '▲' : '▼';
   };
 
-  // Gestionnaire pour l'ouverture de la modale de création
   const handleAddPlayerClick = () => {
-    setPlayerToEdit(null); // S'assurer que la modale est en mode création
+    setPlayerToEdit(null);
     setIsPlayerModalOpen(true);
   };
 
-  // Gestionnaire pour l'ouverture de la modale de modification
   const handleEditPlayerClick = (player: Player) => {
-    setPlayerToEdit(player); // Charger les données du joueur à modifier
+    setPlayerToEdit(player);
     setIsPlayerModalOpen(true);
   };
 
-  // Callback après la création ou la modification d'un joueur via la modale
-  const handlePlayerCreationOrUpdate = async () => {
-    setIsPlayerModalOpen(false); // Fermer la modale
-    setPlayerToEdit(null); // Réinitialiser le joueur à éditer
-    await loadAllData(); // Recharger toutes les données pour mettre à jour le tableau
+  const handlePlayerCreationOrUpdate = async (player: Player) => {
+    setIsPlayerModalOpen(false);
+    setPlayerToEdit(null);
+    await loadAllData();
   };
 
-  // Gestionnaire pour la suppression
   const handleDeletePlayerClick = (player: Player) => {
     setPlayerToDelete(player);
     setIsDeleteModalOpen(true);
@@ -159,12 +150,22 @@ const PlayerManagement: React.FC = () => {
         console.log(`Joueur ${playerToDelete.name} supprimé avec succès.`);
         setIsDeleteModalOpen(false);
         setPlayerToDelete(null);
-        await loadAllData(); // Recharger les joueurs après suppression
+        await loadAllData();
       } catch (err) {
         console.error('Erreur lors de la suppression du joueur:', err);
         setError('Impossible de supprimer le joueur.');
       }
     }
+  };
+
+  // Nouvelle fonction pour naviguer vers la page de gestion de guilde
+  const handleViewGuild = (guildId: string) => {
+    navigate(`/guild-management/${guildId}`);
+  };
+
+  // Nouvelle fonction pour naviguer vers la page de gestion de confrérie
+  const handleViewFellowship = (fellowshipId: string) => {
+    navigate(`/fellowship-management/${fellowshipId}`);
   };
 
   if (loading) {
@@ -217,9 +218,33 @@ const PlayerManagement: React.FC = () => {
               {sortedPlayers.map((player) => (
                 <tr key={player.id}>
                   <td>{player.name}</td>
-                  <td>{getGuildName(player.guildId)}</td>
+                  <td>
+                    {player.guildId ? (
+                      <span
+                        className="clickable-guild" // Utilisation de la classe de la page GuildManagement
+                        onClick={() => handleViewGuild(player.guildId!)}
+                        title={`Voir la guilde "${getGuildName(player.guildId)}"`}
+                      >
+                        {getGuildName(player.guildId)}
+                      </span>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
                   <td>{player.role}</td>
-                  <td>{getFellowshipName(player.fellowshipId)}</td>
+                  <td>
+                    {player.fellowshipId ? (
+                      <span
+                        className="clickable-fellowship" // Utilisation de la classe de la page FellowshipManagement
+                        onClick={() => handleViewFellowship(player.fellowshipId!)}
+                        title={`Voir la confrérie "${getFellowshipName(player.fellowshipId)}"`}
+                      >
+                        {getFellowshipName(player.fellowshipId)}
+                      </span>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
                   <td>{formatNumberForDisplay(player.warCry)}</td>
                   <td>{formatNumberForDisplay(player.destiny)}</td>
                   <td className="action-column">
@@ -247,18 +272,16 @@ const PlayerManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Modale de création/modification de joueur */}
       <PlayerCreationModal
         isOpen={isPlayerModalOpen}
         onClose={() => {
           setIsPlayerModalOpen(false);
-          setPlayerToEdit(null); // Réinitialiser le joueur à éditer à la fermeture
+          setPlayerToEdit(null);
         }}
         onCreate={handlePlayerCreationOrUpdate}
         playerToEdit={playerToEdit}
       />
 
-      {/* Modale de confirmation de suppression */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
