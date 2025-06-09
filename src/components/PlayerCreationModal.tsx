@@ -11,8 +11,8 @@ interface PlayerCreationModalProps {
   onClose: () => void;
   onCreate: (player: Player) => void;
   initialFellowshipId?: string | null;
-  // --- NOUVEAU : Ajout de initialGuildId ---
   initialGuildId?: string | null;
+  playerToEdit?: Player | null;
 }
 
 interface PlayerFormState {
@@ -24,7 +24,7 @@ interface PlayerFormState {
   fellowshipId: string | null;
 }
 
-const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, initialGuildId }: PlayerCreationModalProps) => {
+const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, initialGuildId, playerToEdit }: PlayerCreationModalProps) => {
   const [formData, setFormData] = useState<PlayerFormState>({
     name: '',
     role: 'Membre',
@@ -53,7 +53,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
       const fetchedFellowships = await fellowshipService.getAllFellowships();
       setFellowships(fetchedFellowships);
     } catch (err) {
-      console.error('Error loading guilds/fellowships for player creation:', err);
+      console.error('Error loading guilds/fellowships for player creation/edit:', err);
       setError('Impossible de charger les guildes ou confréries.');
     }
   }, []);
@@ -65,28 +65,49 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
       }, 0);
       document.body.style.overflow = 'hidden';
 
-      // Réinitialiser les états et les valeurs affichées à l'ouverture
-      setWarCryString('0');
-      setDestinyString('0');
+      setError(null);
+      loadAssociations();
+
+      if (playerToEdit) {
+        setFormData({
+          name: playerToEdit.name,
+          role: playerToEdit.role,
+          warCry: playerToEdit.warCry,
+          destiny: playerToEdit.destiny,
+          guildId: playerToEdit.guildId,
+          fellowshipId: playerToEdit.fellowshipId,
+        });
+        setWarCryString(formatNumberForDisplay(playerToEdit.warCry));
+        setDestinyString(formatNumberForDisplay(playerToEdit.destiny));
+      } else {
+        setFormData({
+          name: '',
+          role: 'Membre',
+          warCry: 0,
+          destiny: 0,
+          guildId: initialGuildId || null,
+          fellowshipId: initialFellowshipId || null,
+        });
+        setWarCryString('0');
+        setDestinyString('0');
+      }
+    } else {
+      document.body.style.overflow = '';
       setFormData({
         name: '',
         role: 'Membre',
         warCry: 0,
         destiny: 0,
-        // --- MISE À JOUR : Utiliser initialGuildId s'il est fourni ---
-        guildId: initialGuildId || null,
-        fellowshipId: initialFellowshipId || null,
+        guildId: null,
+        fellowshipId: null,
       });
-
-      setError(null);
-      loadAssociations();
-    } else {
-      document.body.style.overflow = '';
+      setWarCryString('0');
+      setDestinyString('0');
     }
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen, loadAssociations, initialFellowshipId, initialGuildId]); // Ajoutez initialGuildId aux dépendances
+  }, [isOpen, loadAssociations, initialFellowshipId, initialGuildId, playerToEdit]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!modalRef.current) return;
@@ -137,7 +158,6 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
         [name]: value === '' ? null : value,
       }));
     } else {
-      // Gérer les champs textuels convertis en nombres
       if (name === 'warCry') {
         setWarCryString(value);
         const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
@@ -185,24 +205,41 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
       return;
     }
 
-    const playerToCreate: Omit<Player, 'id'> = {
+    const playerPayload = {
       name: formData.name,
       role: formData.role,
       warCry: formData.warCry,
       destiny: formData.destiny,
-      // --- MISE À JOUR : Prioriser initialGuildId si présent, sinon utiliser formData.guildId ---
-      guildId: initialGuildId || formData.guildId,
-      // --- La logique pour fellowshipId était déjà bonne ici ---
-      fellowshipId: initialFellowshipId || formData.fellowshipId
+      // Ces valeurs viennent directement de formData maintenant, elles sont donc modifiables
+      guildId: formData.guildId,
+      fellowshipId: formData.fellowshipId,
     };
 
     try {
-      const createdPlayer = await playerService.createPlayer(playerToCreate);
-      onCreate(createdPlayer);
-      onClose();
+      let resultPlayer: Player | undefined;
+
+      if (playerToEdit) {
+        // En mode édition, l'ID du joueur est requis
+        resultPlayer = await playerService.updatePlayer(playerToEdit.id, playerPayload);
+      } else {
+        // En mode création
+        resultPlayer = await playerService.createPlayer(playerPayload);
+      }
+
+      if (resultPlayer) {
+        onCreate(resultPlayer);
+        onClose();
+      } else {
+        setError('L\'opération sur le joueur a échoué (réponse vide).');
+      }
+
     } catch (err) {
-      console.error('Erreur lors de la création du joueur:', err);
-      setError('Impossible de créer le joueur. Veuillez réessayer.');
+      console.error('Erreur lors de l\'opération sur le joueur:', err);
+      if (err instanceof Error) {
+        setError(`Impossible de sauvegarder le joueur. Erreur: ${err.message}`);
+      } else {
+        setError('Impossible de sauvegarder le joueur. Veuillez réessayer.');
+      }
     } finally {
       setLoading(false);
     }
@@ -227,7 +264,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="player-modal-title">Créer un nouveau Joueur</h2>
+        <h2 id="player-modal-title">{playerToEdit ? `Modifier le Joueur : ${playerToEdit.name}` : 'Créer un nouveau Joueur'}</h2>
         <form onSubmit={handleSubmit}>
           {error && <p className="error-message">{error}</p>}
 
@@ -295,8 +332,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
               name="guildId"
               value={formData.guildId || ''}
               onChange={handleChange}
-              // Désactiver si un initialGuildId est fourni
-              disabled={!!initialGuildId}
+              // Suppression de la prop 'disabled' ici
             >
               <option value="">-- Aucune guilde --</option>
               {guilds.map((guild) => (
@@ -314,8 +350,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
               name="fellowshipId"
               value={formData.fellowshipId || ''}
               onChange={handleChange}
-              // Désactiver si un initialFellowshipId est fourni (pour la cohérence)
-              disabled={!!initialFellowshipId}
+              // Suppression de la prop 'disabled' ici
             >
               <option value="">-- Aucune confrérie --</option>
               {fellowships.map((fellowship) => (
@@ -328,7 +363,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
 
           <div className="modal-actions">
             <button type="submit" className="button-primary" disabled={loading}>
-              {loading ? 'Création...' : 'Créer'}
+              {loading ? 'Sauvegarde...' : (playerToEdit ? 'Mettre à jour' : 'Créer')}
             </button>
             <button type="button" onClick={onClose} className="button-secondary" disabled={loading}>
               Annuler

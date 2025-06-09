@@ -27,6 +27,8 @@ const GuildManagement: React.FC = () => {
   const [isRemovePlayerModalOpen, setIsRemovePlayerModalOpen] = useState<boolean>(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const [isPlayerCreationModalOpen, setIsPlayerCreationModalOpen] = useState<boolean>(false);
+  // NOUVEL ÉTAT : Pour stocker le joueur à modifier
+  const [playerToEdit, setPlayerToEdit] = useState<Player | null>(null);
 
   // --- Data Loading ---
 
@@ -61,9 +63,9 @@ const GuildManagement: React.FC = () => {
           const fetchedPlayers = await playerService.getPlayersByGuildId(guildId);
 
           const playersWithFellowshipNames = fetchedPlayers.map(player => ({
-              ...player,
-              // Ensure allFellowships is available before trying to find
-              fellowship: allFellowships.find(f => f.id === player.fellowshipId) || null
+            ...player,
+            // Ensure allFellowships is available before trying to find
+            fellowship: allFellowships.find(f => f.id === player.fellowshipId) || null
           }));
           setPlayers(playersWithFellowshipNames);
 
@@ -71,10 +73,10 @@ const GuildManagement: React.FC = () => {
           const availablePlayerMap = new Map<string, Player>();
 
           allPlayers.forEach(player => {
-              const isInCurrentGuild = fetchedPlayers.some(p => p.id === player.id);
-              if (!isInCurrentGuild) {
-                  availablePlayerMap.set(player.id, player);
-              }
+            const isInCurrentGuild = fetchedPlayers.some(p => p.id === player.id);
+            if (!isInCurrentGuild) {
+              availablePlayerMap.set(player.id, player);
+            }
           });
           setAvailablePlayers(Array.from(availablePlayerMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
 
@@ -135,8 +137,13 @@ const GuildManagement: React.FC = () => {
     }
   };
 
+  // MODIFICATION ICI : Ouvrir la modale avec les données du joueur
   const handleEditPlayer = (playerId: string) => {
-    navigate(`/player-management/${playerId}`);
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+      setPlayerToEdit(player); // Stocker le joueur à modifier
+      setIsPlayerCreationModalOpen(true); // Ouvrir la modale
+    }
   };
 
   const handleConfirmRemovePlayer = (player: Player) => {
@@ -168,6 +175,7 @@ const GuildManagement: React.FC = () => {
 
   const handleAddPlayer = async () => {
     if (selectedPlayerToAdd === 'create-new-player') {
+      setPlayerToEdit(null); // S'assurer qu'il n'y a pas de joueur à modifier pour une création
       setIsPlayerCreationModalOpen(true);
     } else if (selectedPlayerToAdd && guildId) {
       try {
@@ -186,10 +194,12 @@ const GuildManagement: React.FC = () => {
     }
   };
 
-  const handlePlayerCreated = async (newPlayer: Player) => {
-    console.log(`Nouveau joueur ${newPlayer.name} créé et (potentiellement) ajouté à la guilde.`);
+  // MODIFICATION ICI : Gérer la création ET la mise à jour du joueur
+  const handlePlayerOperationCompleted = async (player: Player) => {
+    console.log(`Opération sur le joueur ${player.name} terminée.`);
     setIsPlayerCreationModalOpen(false);
-    await fetchGuildAndPlayers();
+    setPlayerToEdit(null); // Réinitialiser le joueur à modifier
+    await fetchGuildAndPlayers(); // Rafraîchir les données
   };
 
   const handleGuildChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -213,63 +223,64 @@ const GuildManagement: React.FC = () => {
 
   // 2. Case: No guild selected or guild not found after loading
   if (!guildId || guildName === null) {
-      return (
-          <div className="page-container">
-              <div className="entity-header-row">
-                  <h2 className="entity-title">
-                      Gestion des guildes
-                      {allGuilds.length > 0 && (
-                          <select
-                              value={guildId || ''}
-                              onChange={handleGuildChange}
-                              className="title-select"
-                              aria-label="Sélectionner une autre guilde"
-                          >
-                              {allGuilds.map((g) => (
-                                  <option key={g.id} value={g.id}>
-                                      {g.name}
-                                  </option>
-                              ))}
-                          </select>
-                      )}
-                  </h2>
-              </div>
-              <div className="content-section">
-                  {error && <p className="error-message">{error}</p>}
-                  {!guildId && <p className="info-message">Aucune guilde sélectionnée. Veuillez en choisir une dans la liste déroulante ci-dessus ou créer un nouveau joueur.</p>}
-                  {guildName === null && guildId && <p className="info-message">La guilde avec l'ID "{guildId}" n'a pas été trouvée. Veuillez vérifier l'URL, choisir une autre guilde, ou créer un nouveau joueur.</p>}
+    return (
+      <div className="page-container">
+        <div className="entity-header-row">
+          <h2 className="entity-title">
+            Gestion des guildes
+            {allGuilds.length > 0 && (
+              <select
+                value={guildId || ''}
+                onChange={handleGuildChange}
+                className="title-select"
+                aria-label="Sélectionner une autre guilde"
+              >
+                {allGuilds.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </h2>
+        </div>
+        <div className="content-section">
+          {error && <p className="error-message">{error}</p>}
+          {!guildId && <p className="info-message">Aucune guilde sélectionnée. Veuillez en choisir une dans la liste déroulante ci-dessus ou créer un nouveau joueur.</p>}
+          {guildName === null && guildId && <p className="info-message">La guilde avec l'ID "{guildId}" n'a pas été trouvée. Veuillez vérifier l'URL, choisir une autre guilde, ou créer un nouveau joueur.</p>}
 
-                  <div className="add-player-section">
-                      <h4>Créer un nouveau joueur</h4>
-                      <p className="info-message">Vous pouvez créer un nouveau joueur, même s'il n'est pas encore associé à une guilde.</p>
-                      <div className="form-group">
-                          <label htmlFor="selectPlayerCreate">Action :</label>
-                          <select
-                            id="selectPlayerCreate"
-                            value={selectedPlayerToAdd}
-                            onChange={(e) => setSelectedPlayerToAdd(e.target.value)}
-                          >
-                            <option value="">-- Choisir une action --</option>
-                            <option value="create-new-player">Créer un nouveau joueur</option>
-                          </select>
-                          <button
-                            onClick={handleAddPlayer}
-                            className="button-primary"
-                            disabled={selectedPlayerToAdd !== 'create-new-player'}
-                          >
-                            Créer
-                          </button>
-                      </div>
-                  </div>
-              </div>
-              <PlayerCreationModal
-                isOpen={isPlayerCreationModalOpen}
-                onClose={() => setIsPlayerCreationModalOpen(false)}
-                onCreate={handlePlayerCreated}
-                initialGuildId={guildId}
-              />
+          <div className="add-player-section">
+            <h4>Créer un nouveau joueur</h4>
+            <p className="info-message">Vous pouvez créer un nouveau joueur, même s'il n'est pas encore associé à une guilde.</p>
+            <div className="form-group">
+              <label htmlFor="selectPlayerCreate">Action :</label>
+              <select
+                id="selectPlayerCreate"
+                value={selectedPlayerToAdd}
+                onChange={(e) => setSelectedPlayerToAdd(e.target.value)}
+              >
+                <option value="">-- Choisir une action --</option>
+                <option value="create-new-player">Créer un nouveau joueur</option>
+              </select>
+              <button
+                onClick={handleAddPlayer}
+                className="button-primary"
+                disabled={selectedPlayerToAdd !== 'create-new-player'}
+              >
+                Créer
+              </button>
+            </div>
           </div>
-      );
+        </div>
+        <PlayerCreationModal
+          isOpen={isPlayerCreationModalOpen}
+          onClose={() => { setIsPlayerCreationModalOpen(false); setPlayerToEdit(null); }} // Réinitialiser playerToEdit à la fermeture
+          onCreate={handlePlayerOperationCompleted} // Renommé pour englober création et update
+          initialGuildId={guildId}
+          playerToEdit={playerToEdit} // PASSER le joueur à modifier
+        />
+      </div>
+    );
   }
 
   // 3. Normal rendering when a guild is found and loaded
@@ -326,7 +337,7 @@ const GuildManagement: React.FC = () => {
                     <tr key={player.id}>
                       <td>{player.name}</td>
                       <td>{player.role}</td>
-                                            <td>
+                      <td>
                         {player.fellowship ? (
                           <span
                             className="clickable-fellowship" // Appliquer un style CSS pour le rendre cliquable
@@ -341,7 +352,7 @@ const GuildManagement: React.FC = () => {
                       </td>
                       <td className="action-column">
                         <button
-                          onClick={() => handleEditPlayer(player.id)}
+                          onClick={() => handleEditPlayer(player.id)} // Le clic ici appellera la nouvelle fonction
                           className="action-button edit-button"
                           title="Modifier le joueur"
                         >
@@ -409,11 +420,13 @@ const GuildManagement: React.FC = () => {
         message={playerToRemove ? `Êtes-vous sûr de vouloir retirer "${playerToRemove.name}" de cette guilde ? Le joueur ne sera pas supprimé du jeu.` : ''}
       />
 
+      {/* MODIFICATION ICI : Passer le playerToEdit à la modale */}
       <PlayerCreationModal
         isOpen={isPlayerCreationModalOpen}
-        onClose={() => setIsPlayerCreationModalOpen(false)}
-        onCreate={handlePlayerCreated}
+        onClose={() => { setIsPlayerCreationModalOpen(false); setPlayerToEdit(null); }}
+        onCreate={handlePlayerOperationCompleted}
         initialGuildId={guildId}
+        playerToEdit={playerToEdit} // Passe le joueur à modifier
       />
     </div>
   );

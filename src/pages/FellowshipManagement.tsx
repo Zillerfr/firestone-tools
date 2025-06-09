@@ -1,4 +1,3 @@
-// src/pages/FellowshipManagement.tsx
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fellowshipService } from '../services/fellowshipService';
@@ -28,6 +27,8 @@ const FellowshipManagement: React.FC = () => {
   const [isRemovePlayerModalOpen, setIsRemovePlayerModalOpen] = useState<boolean>(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const [isPlayerCreationModalOpen, setIsPlayerCreationModalOpen] = useState<boolean>(false);
+  // NOUVEL ÉTAT : pour stocker le joueur à éditer
+  const [playerToEdit, setPlayerToEdit] = useState<Player | null>(null);
 
   const MAX_PLAYERS_IN_FELLOWSHIP = 5;
   const isFellowshipFull = players.length >= MAX_PLAYERS_IN_FELLOWSHIP;
@@ -65,9 +66,9 @@ const FellowshipManagement: React.FC = () => {
     setError(null);
 
     try {
-      // Récupérer toutes les confréries une seule fois ici pour éviter des appels répétitifs
       const allFellowshipsData = await fellowshipService.getAllFellowships();
-      const fellowshipMap = new Map<string, string>(); // Map fellowship ID to name
+      setAllFellowships(allFellowshipsData); // Mise à jour de allFellowships ici aussi pour les cas de changement/suppression
+      const fellowshipMap = new Map<string, string>();
       allFellowshipsData.forEach(f => fellowshipMap.set(f.id, f.name));
 
       if (fellowshipId) {
@@ -88,8 +89,6 @@ const FellowshipManagement: React.FC = () => {
           allPlayers.forEach(player => {
             const isInCurrentFellowship = fetchedPlayers.some(p => p.id === player.id);
             if (!isInCurrentFellowship) {
-              // Si le joueur est dans une confrérie, nous créons un objet Fellowship
-              // et l'attachons à l'objet Player.
               const playerFellowship = player.fellowshipId
                 ? allFellowshipsData.find(f => f.id === player.fellowshipId) || null
                 : null;
@@ -160,8 +159,10 @@ const FellowshipManagement: React.FC = () => {
     }
   };
 
-  const handleEditPlayer = (playerId: string) => {
-    navigate(`/player-management/${playerId}`);
+  // MODIFICATION ICI : handleEditPlayer ouvre la modale
+  const handleEditPlayer = (player: Player) => {
+    setPlayerToEdit(player); // Définit le joueur à éditer
+    setIsPlayerCreationModalOpen(true); // Ouvre la modale
   };
 
   const handleConfirmRemovePlayer = (player: Player) => {
@@ -173,6 +174,7 @@ const FellowshipManagement: React.FC = () => {
     if (playerToRemove) {
       try {
         setError(null);
+        // MODIFICATION ICI : on s'assure que le champ `fellowshipId` est bien mis à `null`
         const updatedPlayer = await playerService.updatePlayer(playerToRemove.id, { fellowshipId: null });
 
         if (updatedPlayer) {
@@ -198,6 +200,8 @@ const FellowshipManagement: React.FC = () => {
     }
 
     if (selectedPlayerToAdd === 'create-new-player') {
+      // Pour la création, on s'assure qu'aucun joueur n'est en édition
+      setPlayerToEdit(null);
       setIsPlayerCreationModalOpen(true);
     } else if (selectedPlayerToAdd && fellowshipId) {
       try {
@@ -216,11 +220,19 @@ const FellowshipManagement: React.FC = () => {
     }
   };
 
-  const handlePlayerCreated = async (newPlayer: Player) => {
-    console.log(`Nouveau joueur ${newPlayer.name} créé et (potentiellement) ajouté à la confrérie.`);
+  // MODIFICATION ICI : handlePlayerCreated déclenche un rechargement
+  const handlePlayerCreated = async (player: Player) => { // 'player' peut être un joueur créé ou édité
+    console.log(`Joueur ${player.name} opéré avec succès.`);
     setIsPlayerCreationModalOpen(false);
-    await fetchFellowshipAndPlayers();
+    setPlayerToEdit(null); // Réinitialiser le joueur à éditer
+    await fetchFellowshipAndPlayers(); // Recharger les données pour mettre à jour la liste
   };
+
+  const handlePlayerCreationModalClose = () => {
+    setIsPlayerCreationModalOpen(false);
+    setPlayerToEdit(null); // Toujours réinitialiser en fermant la modale
+  };
+
 
   const handleFellowshipChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newFellowshipId = e.target.value;
@@ -241,8 +253,6 @@ const FellowshipManagement: React.FC = () => {
   }
 
   // 2. Rendu si aucune confrérie n'est sélectionnée ou trouvée après le chargement initial
-  // On utilise 'loading' ici pour gérer le cas où un ID est présent mais la confrérie est introuvable
-  // ou si la confrérie est en cours de chargement spécifique
   if (!fellowshipId || fellowshipName === null) {
     return (
       <div className="page-container">
@@ -308,11 +318,13 @@ const FellowshipManagement: React.FC = () => {
             </>
           )}
         </div>
+        {/* Passer playerToEdit et gérer la fermeture correctement */}
         <PlayerCreationModal
           isOpen={isPlayerCreationModalOpen}
-          onClose={() => setIsPlayerCreationModalOpen(false)}
+          onClose={handlePlayerCreationModalClose} // Utilisez la nouvelle fonction de fermeture
           onCreate={handlePlayerCreated}
           initialFellowshipId={fellowshipId}
+          playerToEdit={playerToEdit} // Passez le joueur à éditer
         />
       </div>
     );
@@ -383,7 +395,8 @@ const FellowshipManagement: React.FC = () => {
                       <td className="align-right">{formatNumberForDisplay(player.destiny)}</td>
                       <td className="action-column">
                         <button
-                          onClick={() => handleEditPlayer(player.id)}
+                          // MODIFICATION ICI : Passe l'objet `player` entier à `handleEditPlayer`
+                          onClick={() => handleEditPlayer(player)}
                           className="action-button edit-button"
                           title="Modifier le joueur"
                         >
@@ -466,9 +479,10 @@ const FellowshipManagement: React.FC = () => {
 
       <PlayerCreationModal
         isOpen={isPlayerCreationModalOpen}
-        onClose={() => setIsPlayerCreationModalOpen(false)}
+        onClose={handlePlayerCreationModalClose} // Utilisez la nouvelle fonction de fermeture
         onCreate={handlePlayerCreated}
         initialFellowshipId={fellowshipId}
+        playerToEdit={playerToEdit} // Passez le joueur à éditer
       />
     </div>
   );
