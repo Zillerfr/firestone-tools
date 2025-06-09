@@ -291,7 +291,7 @@ const PlayerCreationModal = ({ isOpen, onClose, onCreate, initialFellowshipId, i
               onChange={handleChange}
               required
             >
-              <option value="Liste">En liste d'attente</option>
+              <option value="En liste d'attente">En liste d'attente</option>
               <option value="Membre">Membre</option>
               <option value="Officier">Officier</option>
               <option value="Chef de guilde">Chef de guilde</option>

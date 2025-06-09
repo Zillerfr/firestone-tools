@@ -4,29 +4,23 @@ import AureliaFairy from '../assets/img/AureliaFairy.webp';
 import './Home.css';
 import { guildService } from '../services/guildService';
 import { fellowshipService } from '../services/fellowshipService';
-import { playerService } from '../services/playerService';
-import type { Guild, Fellowship, Player } from '../types/data'; // Player type is important here
+import type { Guild, Fellowship /*, Player*/ } from '../types/data'; // <-- Supprimez Player de l'import
 import GuildCreationModal from '../components/GuildCreationModal';
 import FellowshipCreationModal from '../components/FellowshipCreationModal';
-import PlayerCreationModal from '../components/PlayerCreationModal';
 import { GuildContext } from '../contexts/GuildContext';
 import { FellowshipContext } from '../contexts/FellowshipContext';
-import { PlayerContext } from '../contexts/PlayerContext';
 
 const Home: React.FC = () => {
   const { selectedGuildId, setSelectedGuildId } = useContext(GuildContext);
   const { selectedFellowshipId, setSelectedFellowshipId } = useContext(FellowshipContext);
-  const { selectedPlayerId, setSelectedPlayerId } = useContext(PlayerContext);
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [fellowships, setFellowships] = useState<Fellowship[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const [isGuildCreationModalOpen, setIsGuildCreationModalOpen] = useState<boolean>(false);
   const [isFellowshipCreationModalOpen, setIsFellowshipCreationModalOpen] = useState<boolean>(false);
-  const [isPlayerCreationModalOpen, setIsPlayerCreationModalOpen] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -45,19 +39,13 @@ const Home: React.FC = () => {
         setSelectedFellowshipId(null);
       }
 
-      const fetchedPlayers = await playerService.getAllPlayers();
-      setPlayers(fetchedPlayers);
-      if (selectedPlayerId && !fetchedPlayers.some(p => p.id === selectedPlayerId)) {
-        setSelectedPlayerId(null);
-      }
-
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Impossible de charger les données.');
     } finally {
       setLoading(false);
     }
-  }, [selectedGuildId, setSelectedGuildId, selectedFellowshipId, setSelectedFellowshipId, selectedPlayerId, setSelectedPlayerId]);
+  }, [selectedGuildId, setSelectedGuildId, selectedFellowshipId, setSelectedFellowshipId /*, selectedPlayerId, setSelectedPlayerId*/]); // Mettez à jour les dépendances
 
   useEffect(() => {
     loadData();
@@ -87,16 +75,6 @@ const Home: React.FC = () => {
       console.error('Erreur lors de la création de la confrérie:', err);
       setError('Impossible de créer la confrérie.');
     }
-  };
-
-  // handleCreatePlayer reçoit maintenant le Player complet de la modale,
-  // car la modale a déjà géré la création via playerService.createPlayer.
-  // Cette fonction ne doit plus appeler playerService.createPlayer.
-  const handleCreatePlayer = async (newPlayer: Player) => { // Changez le type de playerData à Player
-    console.log('Nouveau joueur créé par la modale:', newPlayer);
-    setIsPlayerCreationModalOpen(false); // Fermez la modale
-    await loadData(); // Rechargez les données pour inclure le nouveau joueur
-    setSelectedPlayerId(newPlayer.id); // Sélectionnez le nouveau joueur si désiré
   };
 
   if (loading) return <p>Chargement des données...</p>;
@@ -163,32 +141,6 @@ const Home: React.FC = () => {
         </button>
       </div>
 
-      {/* Nouvelle Section de sélection de Joueur */}
-      <div className="selection-section">
-        <label htmlFor="player-select">Sélectionner un Joueur : </label>
-        <select
-          id="player-select"
-          value={selectedPlayerId || ''}
-          onChange={(e) => setSelectedPlayerId(e.target.value || null)}
-          disabled={players.length === 0 && !selectedPlayerId}
-          className="select-dropdown"
-        >
-          {players.length === 0 ? (
-            <option value="">Aucun joueur disponible</option>
-          ) : (
-            <option value="">-- Sélectionnez un joueur --</option>
-          )}
-          {players.map((player) => (
-            <option key={player.id} value={player.id}>
-              {player.name}
-            </option>
-          ))}
-        </select>
-        <button onClick={() => setIsPlayerCreationModalOpen(true)} className="add-button">
-          Ajouter un Joueur
-        </button>
-      </div>
-
       {/* Popin de création de guilde */}
       <GuildCreationModal
         isOpen={isGuildCreationModalOpen}
@@ -201,13 +153,6 @@ const Home: React.FC = () => {
         isOpen={isFellowshipCreationModalOpen}
         onClose={() => setIsFellowshipCreationModalOpen(false)}
         onCreate={handleCreateFellowship}
-      />
-
-      {/* CORRECTED: Nouvelle Popin de création de joueur, passing onCreate handler */}
-      <PlayerCreationModal
-        isOpen={isPlayerCreationModalOpen}
-        onClose={() => setIsPlayerCreationModalOpen(false)}
-        onCreate={handleCreatePlayer}
       />
     </div>
   );

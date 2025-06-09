@@ -1,399 +1,269 @@
 // src/pages/PlayerManagement.tsx
-import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { playerService } from '../services/playerService';
 import { guildService } from '../services/guildService';
 import { fellowshipService } from '../services/fellowshipService';
-import { PlayerContext } from '../contexts/PlayerContext';
 import ConfirmationModal from '../components/ConfirmationModal';
-import type { Guild, Fellowship, Player } from '../types/data'; // Importez Player ici
+import PlayerCreationModal from '../components/PlayerCreationModal';
+import type { Guild, Fellowship, Player } from '../types/data';
 import './PageStyles.css';
 
-interface PlayerFormState {
-  name: string;
-  role: string;
-  warCry: number;
-  destiny: number;
-  guildId: string | null;
-  fellowshipId: string | null;
-}
+type SortKey = keyof Player | 'guildName' | 'fellowshipName'; // Ajoutez les noms de guilde/confrérie pour le tri
+type SortDirection = 'asc' | 'desc';
 
 const PlayerManagement: React.FC = () => {
-  const { playerId } = useParams<{ playerId: string }>();
-  const navigate = useNavigate();
-  const { setSelectedPlayerId } = useContext(PlayerContext);
 
-  const [formData, setFormData] = useState<PlayerFormState>({
-    name: '',
-    role: 'Membre',
-    warCry: 0,
-    destiny: 0,
-    guildId: null,
-    fellowshipId: null,
-  });
-
-  const [warCryString, setWarCryString] = useState<string>('');
-  const [destinyString, setDestinyString] = useState<string>('');
-
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [fellowships, setFellowships] = useState<Fellowship[]>([]);
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]); // Nouveau: pour stocker tous les joueurs
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [isFormDirty, setIsFormDirty] = useState<boolean>(false);
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
+
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState<boolean>(false);
+  const [playerToEdit, setPlayerToEdit] = useState<Player | null>(null);
+
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection } | null>(null);
+
+  // Fonction pour charger toutes les données nécessaires
+  const loadAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [fetchedPlayers, fetchedGuilds, fetchedFellowships] = await Promise.all([
+        playerService.getAllPlayers(),
+        guildService.getAllGuilds(),
+        fellowshipService.getAllFellowships(),
+      ]);
+      setAllPlayers(fetchedPlayers); // Ne pas trier ici, le tri sera géré par la fonction sort
+      setGuilds(fetchedGuilds);
+      setFellowships(fetchedFellowships);
+    } catch (err) {
+      console.error('Erreur lors du chargement des données:', err);
+      setError('Impossible de charger les joueurs, guildes ou confréries.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Charger les données au montage du composant
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
+
+  // Fonction utilitaire pour obtenir le nom de la guilde/confrérie par ID
+  const getGuildName = (guildId: string | null) => {
+    if (!guildId) return 'N/A';
+    const guild = guilds.find(g => g.id === guildId);
+    return guild ? guild.name : 'Inconnue';
+  };
+
+  const getFellowshipName = (fellowshipId: string | null) => {
+    if (!fellowshipId) return 'N/A';
+    const fellowship = fellowships.find(f => f.id === fellowshipId);
+    return fellowship ? fellowship.name : 'Inconnue';
+  };
+
+  // Formattage des nombres pour l'affichage
   const formatNumberForDisplay = useCallback((num: number): string => {
-    if (num === null || isNaN(num)) return '';
+    if (num === null || isNaN(num)) return '0';
     return num.toLocaleString(undefined, { maximumFractionDigits: 0 });
   }, []);
 
-  const loadAssociationsAndPlayers = useCallback(async () => {
-    try {
-      const fetchedGuilds = await guildService.getAllGuilds();
-      setGuilds(fetchedGuilds);
+  // Logique de tri
+  const sortedPlayers = React.useMemo(() => {
+    let sortableItems = [...allPlayers];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
 
-      const fetchedFellowships = await fellowshipService.getAllFellowships();
-      setFellowships(fetchedFellowships);
-
-      const fetchedPlayers = await playerService.getAllPlayers(); // Nouveau: charger tous les joueurs
-      setAllPlayers(fetchedPlayers.sort((a, b) => a.name.localeCompare(b.name))); // Trier par nom
-    } catch (err) {
-      console.error('Erreur lors du chargement des données:', err);
-      setError('Impossible de charger les guildes, confréries ou joueurs.');
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchPlayerDetails = async () => {
-      if (playerId) {
-        try {
-          setLoading(true);
-          setError(null);
-          await loadAssociationsAndPlayers(); // Charger toutes les associations et joueurs
-
-          const player = await playerService.getPlayerById(playerId);
-          if (player) {
-            setFormData({
-              name: player.name,
-              role: player.role,
-              warCry: player.warCry,
-              destiny: player.destiny,
-              guildId: player.guildId || null,
-              fellowshipId: player.fellowshipId || null,
-            });
-            setWarCryString(formatNumberForDisplay(player.warCry));
-            setDestinyString(formatNumberForDisplay(player.destiny));
-            setIsFormDirty(false);
-          } else {
-            setError('Joueur non trouvé.');
-            navigate('/');
-          }
-        } catch (err) {
-          console.error('Erreur lors de la récupération du joueur ou des associations:', err);
-          setError('Impossible de charger les détails du joueur ou les associations.');
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-        setError('Aucun ID de joueur fourni dans l\'URL.');
-        navigate('/');
-      }
-    };
-    fetchPlayerDetails();
-  }, [playerId, navigate, loadAssociationsAndPlayers, formatNumberForDisplay]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    let updatedFormData: PlayerFormState;
-
-    if (['guildId', 'fellowshipId'].includes(name)) {
-        updatedFormData = {
-            ...formData,
-            [name]: value === '' ? null : value,
-        };
-    } else {
-        if (name === 'warCry') {
-            setWarCryString(value);
-            const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
-            const parsedValue = parseInt(cleanedValue, 10);
-            updatedFormData = {
-                ...formData,
-                [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
-            };
-        } else if (name === 'destiny') {
-            setDestinyString(value);
-            const cleanedValue = value.replace(/\s/g, '').replace(/,/g, '');
-            const parsedValue = parseInt(cleanedValue, 10);
-            updatedFormData = {
-                ...formData,
-                [name]: isNaN(parsedValue) ? 0 : Math.max(0, parsedValue),
-            };
-        }
-        else {
-            updatedFormData = {
-                ...formData,
-                [name]: value,
-            };
-        }
-    }
-    setFormData(updatedFormData);
-    setIsFormDirty(true);
-  };
-
-  const handleUpdatePlayer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!playerId) {
-      setError('ID de joueur manquant pour la mise à jour.');
-      return;
-    }
-    if (formData.name.trim() === '') {
-      setError('Le nom du joueur ne peut pas être vide.');
-      return;
-    }
-    if (formData.warCry < 0) {
-      setError('Cri de guerre doit être un nombre positif ou nul.');
-      return;
-    }
-    if (formData.destiny < 0) {
-      setError('Destin doit être un nombre positif ou nul.');
-      return;
-    }
-
-    try {
-      setError(null);
-      const { ...playerDataToUpdate } = formData;
-
-      const updatedPlayer = await playerService.updatePlayer(playerId, playerDataToUpdate);
-      if (updatedPlayer) {
-        console.log(`Joueur ${updatedPlayer.name} (ID: ${playerId}) mis à jour avec succès.`);
-        setIsFormDirty(false);
-        setWarCryString(formatNumberForDisplay(updatedPlayer.warCry));
-        setDestinyString(formatNumberForDisplay(updatedPlayer.destiny));
-        // Mettre à jour la liste de tous les joueurs si le nom a changé
-        setAllPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
-      } else {
-        setError('Échec de la mise à jour du joueur ou joueur non trouvé.');
-      }
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour du joueur:', err);
-      setError(`Une erreur est survenue lors de la mise à jour: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  };
-
-  const handleDeletePlayer = async () => {
-    if (playerId) {
-      try {
-        const success = await playerService.deletePlayer(playerId);
-        if (success) {
-          console.log(`Joueur ${formData.name} (ID: ${playerId}) supprimé avec succès.`);
-          setSelectedPlayerId(null);
-          navigate('/');
+        if (sortConfig.key === 'guildName') {
+          aValue = getGuildName(a.guildId);
+          bValue = getGuildName(b.guildId);
+        } else if (sortConfig.key === 'fellowshipName') {
+          aValue = getFellowshipName(a.fellowshipId);
+          bValue = getFellowshipName(b.fellowshipId);
         } else {
-          setError('Échec de la suppression du joueur.');
+          aValue = a[sortConfig.key];
+          bValue = b[sortConfig.key];
         }
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc'
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc'
+            ? aValue - bValue
+            : bValue - aValue;
+        }
+        // Gérer les nulls/undefineds en les plaçant à la fin en fonction du tri
+        if (aValue === null || aValue === undefined) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (bValue === null || bValue === undefined) return sortConfig.direction === 'asc' ? -1 : 1;
+
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [allPlayers, sortConfig, guilds, fellowships, getGuildName, getFellowshipName]);
+
+  const requestSort = (key: SortKey) => {
+    let direction: SortDirection = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Modification ici: Ne retourne que le caractère, le positionnement est fait en CSS
+  const getSortIndicator = (key: SortKey) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return '-'; // Signe "-" si non trié
+    }
+    return sortConfig.direction === 'asc' ? '▲' : '▼';
+  };
+
+  // Gestionnaire pour l'ouverture de la modale de création
+  const handleAddPlayerClick = () => {
+    setPlayerToEdit(null); // S'assurer que la modale est en mode création
+    setIsPlayerModalOpen(true);
+  };
+
+  // Gestionnaire pour l'ouverture de la modale de modification
+  const handleEditPlayerClick = (player: Player) => {
+    setPlayerToEdit(player); // Charger les données du joueur à modifier
+    setIsPlayerModalOpen(true);
+  };
+
+  // Callback après la création ou la modification d'un joueur via la modale
+  const handlePlayerCreationOrUpdate = async () => {
+    setIsPlayerModalOpen(false); // Fermer la modale
+    setPlayerToEdit(null); // Réinitialiser le joueur à éditer
+    await loadAllData(); // Recharger toutes les données pour mettre à jour le tableau
+  };
+
+  // Gestionnaire pour la suppression
+  const handleDeletePlayerClick = (player: Player) => {
+    setPlayerToDelete(player);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeletePlayer = async () => {
+    if (playerToDelete) {
+      try {
+        await playerService.deletePlayer(playerToDelete.id);
+        console.log(`Joueur ${playerToDelete.name} supprimé avec succès.`);
+        setIsDeleteModalOpen(false);
+        setPlayerToDelete(null);
+        await loadAllData(); // Recharger les joueurs après suppression
       } catch (err) {
         console.error('Erreur lors de la suppression du joueur:', err);
-        setError('Une erreur est survenue lors de la suppression.');
-      } finally {
-        setIsDeleteModalOpen(false);
+        setError('Impossible de supprimer le joueur.');
       }
-    }
-  };
-
-  const handleGoToFellowship = () => {
-    if (formData.fellowshipId) {
-      navigate(`/fellowship-management/${formData.fellowshipId}`);
-    }
-  };
-
-  const handleGoToGuild = () => {
-    if (formData.guildId) {
-      navigate(`/guild-management/${formData.guildId}`);
-    }
-  };
-
-  // Nouveau gestionnaire pour le changement de joueur via la liste déroulante
-  const handlePlayerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newPlayerId = e.target.value;
-    if (newPlayerId) {
-      navigate(`/player-management/${newPlayerId}`);
     }
   };
 
   if (loading) {
-    return <p className="loading-message">Chargement des détails du joueur...</p>;
+    return <p className="loading-message">Chargement des joueurs...</p>;
   }
 
-  if (error && !formData.name) {
+  if (error) {
     return <p className="error-message">Erreur: {error}</p>;
-  }
-
-  if (!playerId) {
-    return <p className="info-message">Aucun ID de joueur fourni. Redirection en cours...</p>;
   }
 
   return (
     <div className="page-container">
       <div className="entity-header-row">
-        {/* Remplacer le titre par la liste déroulante */}
-        <h2 className="entity-title">
-          Gestion du joueur :{' '}
-          <select
-            value={playerId || ''}
-            onChange={handlePlayerChange}
-            className="title-select" // Utilisez la même classe CSS que pour la confrérie
-            aria-label="Sélectionner un autre joueur"
-          >
-            {allPlayers.length === 0 ? (
-              <option value="" disabled>Chargement des joueurs...</option>
-            ) : (
-              <>
-                {allPlayers.map((player) => (
-                  <option key={player.id} value={player.id}>
-                    {player.name}
-                  </option>
-                ))}
-              </>
-            )}
-          </select>
-        </h2>
-        <button
-          onClick={() => setIsDeleteModalOpen(true)}
-          className="delete-entity-button"
-        >
-          Supprimer le Joueur
+        <h2 className="entity-title">Gestion des Joueurs</h2>
+        <button onClick={handleAddPlayerClick} className="add-button">
+          Ajouter un joueur
         </button>
       </div>
 
-      <form onSubmit={handleUpdatePlayer} className="player-management-form">
-        {error && <p className="error-message">{error}</p>}
+      <div className="table-container">
+        {allPlayers.length === 0 ? (
+          <p>Aucun joueur disponible. Cliquez sur "Ajouter un joueur" pour en créer un.</p>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th onClick={() => requestSort('name')}>
+                  Nom du Joueur <span className="sort-indicator">{getSortIndicator('name')}</span>
+                </th>
+                <th onClick={() => requestSort('guildName')}>
+                  Nom de Guilde <span className="sort-indicator">{getSortIndicator('guildName')}</span>
+                </th>
+                <th onClick={() => requestSort('role')}>
+                  Rôle <span className="sort-indicator">{getSortIndicator('role')}</span>
+                </th>
+                <th onClick={() => requestSort('fellowshipName')}>
+                  Nom de Confrérie <span className="sort-indicator">{getSortIndicator('fellowshipName')}</span>
+                </th>
+                <th onClick={() => requestSort('warCry')}>
+                  Cri de Guerre <span className="sort-indicator">{getSortIndicator('warCry')}</span>
+                </th>
+                <th onClick={() => requestSort('destiny')}>
+                  Destin <span className="sort-indicator">{getSortIndicator('destiny')}</span>
+                </th>
+                <th className="action-column">Modifier</th>
+                <th className="action-column">Supprimer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedPlayers.map((player) => (
+                <tr key={player.id}>
+                  <td>{player.name}</td>
+                  <td>{getGuildName(player.guildId)}</td>
+                  <td>{player.role}</td>
+                  <td>{getFellowshipName(player.fellowshipId)}</td>
+                  <td>{formatNumberForDisplay(player.warCry)}</td>
+                  <td>{formatNumberForDisplay(player.destiny)}</td>
+                  <td className="action-column">
+                    <button
+                      onClick={() => handleEditPlayerClick(player)}
+                      className="action-button edit-button"
+                      title="Modifier"
+                    >
+                      ✏️
+                    </button>
+                  </td>
+                  <td className="action-column">
+                    <button
+                      onClick={() => handleDeletePlayerClick(player)}
+                      className="action-button delete-button"
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="name">Nom du Joueur&nbsp;:</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Ex: Aurelia"
-            required
-          />
-        </div>
+      {/* Modale de création/modification de joueur */}
+      <PlayerCreationModal
+        isOpen={isPlayerModalOpen}
+        onClose={() => {
+          setIsPlayerModalOpen(false);
+          setPlayerToEdit(null); // Réinitialiser le joueur à éditer à la fermeture
+        }}
+        onCreate={handlePlayerCreationOrUpdate}
+        playerToEdit={playerToEdit}
+      />
 
-        <div className="form-group">
-          <label htmlFor="role">Rôle&nbsp;:</label>
-          <select
-            id="role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            required
-          >
-            <option value="Liste">En liste d'attente</option>
-            <option value="Membre">Membre</option>
-            <option value="Officier">Officier</option>
-            <option value="Chef de guilde">Chef de guilde</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="warCry">Cri de Guerre&nbsp;:</label>
-          <input
-            type="text"
-            id="warCry"
-            name="warCry"
-            value={warCryString}
-            onBlur={() => setWarCryString(formatNumberForDisplay(formData.warCry))}
-            onChange={handleChange}
-            placeholder="Ex: 1 234 567"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="destiny">Destin&nbsp;:</label>
-          <input
-            type="text"
-            id="destiny"
-            name="destiny"
-            value={destinyString}
-            onBlur={() => setDestinyString(formatNumberForDisplay(formData.destiny))}
-            onChange={handleChange}
-            placeholder="Ex: 987 654"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="guildId">Guilde&nbsp;:</label>
-          <select
-            id="guildId"
-            name="guildId"
-            value={formData.guildId || ''}
-            onChange={handleChange}
-          >
-            <option value="">-- Aucune guilde --</option>
-            {guilds.map((guild) => (
-              <option key={guild.id} value={guild.id}>
-                {guild.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="fellowshipId">Confrérie&nbsp;:</label>
-          <select
-            id="fellowshipId"
-            name="fellowshipId"
-            value={formData.fellowshipId || ''}
-            onChange={handleChange}
-          >
-            <option value="">-- Aucune confrérie --</option>
-            {fellowships.map((fellowship) => (
-              <option key={fellowship.id} value={fellowship.id}>
-                {fellowship.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-actions">
-          <button type="submit" className="button-primary" disabled={!isFormDirty}>
-            Sauvegarder les modifications
-          </button>
-
-          <button
-            type="button"
-            onClick={handleGoToFellowship}
-            className="button-secondary"
-            disabled={!formData.fellowshipId}
-          >
-            Aller à la confrérie
-          </button>
-          <button
-            type="button"
-            onClick={handleGoToGuild}
-            className="button-secondary"
-            disabled={!formData.guildId}
-          >
-            Aller à la guilde
-          </button>
-
-          <button type="button" onClick={() => navigate('/')} className="button-secondary">
-            Retour à l'accueil
-          </button>
-        </div>
-      </form>
-
+      {/* Modale de confirmation de suppression */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeletePlayer}
-        message={`Êtes-vous sûr de vouloir supprimer le joueur "${formData.name}" ? Cette action est irréversible.`}
+        onConfirm={confirmDeletePlayer}
+        message={`Êtes-vous sûr de vouloir supprimer le joueur "${playerToDelete?.name}" ? Cette action est irréversible.`}
       />
     </div>
   );

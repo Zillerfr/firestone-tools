@@ -162,15 +162,6 @@
     align-items: center;
 }
 
-.content-section h3 {
-    color: #61dafb;
-    margin-top: 0;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 1.5em;
-    width: 100%;
-}
-
 /* --- STYLES GÉNÉRIQUES POUR LES TABLEAUX DE DONNÉES --- */
 .table-responsive {
     overflow-x: auto;
@@ -524,9 +515,12 @@
 }
 
 .content-section h3 {
-  color: #abb2bf; /* Titres de section */
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  text-align: center;
+  font-size: 1.5em;
+  width: 100%;
+  color: #abb2bf; /* Titres de section */
   border-bottom: 1px solid #3e4451; /* Ligne sous les titres de section */
   padding-bottom: 10px;
 }
@@ -535,7 +529,7 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  margin-top: 0;
 }
 
 .data-table th,
@@ -550,6 +544,10 @@
   background-color: #3a3f47; /* Fond des en-têtes de tableau */
   color: #61dafb; /* Couleur du texte des en-têtes */
   font-weight: bold;
+    font-size: 0.9em;
+    cursor: pointer;
+    position: relative; /* Indispensable pour le positionnement absolu de l'indicateur */
+    padding-right: 30px; /* Ajoute de l'espace à droite pour l'indicateur */
 }
 
 .data-table tbody tr:nth-child(even) {
@@ -558,6 +556,24 @@
 
 .data-table tbody tr:hover {
   background-color: #3e4451; /* Survol des lignes */
+}
+
+.sort-indicator {
+    position: absolute; /* Positionnement absolu par rapport au TH */
+    right: 10px; /* Aligné à 10px du bord droit du TH */
+    top: 50%; /* Centré verticalement */
+    transform: translateY(-50%); /* Ajustement pour un centrage parfait */
+    font-size: 0.8em;
+    opacity: 0.7;
+    /* Supprimer margin-left car il n'est plus pertinent avec le positionnement absolu */
+}
+
+.sort-indicator {
+    font-size: 0.8em;
+    margin-left: 10px; /* Ajoute un peu d'espace entre le texte et l'indicateur */
+    opacity: 0.7;
+    /* Pour s'assurer qu'il est toujours à droite */
+    flex-shrink: 0; /* Empêche l'indicateur de rétrécir */
 }
 
 .align-right {
