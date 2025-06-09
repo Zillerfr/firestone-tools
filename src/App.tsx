@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Home from './pages/Home';
 import GuildManagement from './pages/GuildManagement';
@@ -40,11 +40,12 @@ const MainContentWrapper: React.FC = () => {
 const App: React.FC = () => {
   const [selectedGuildId, setSelectedGuildId] = useState<string | null>(null);
   const [selectedFellowshipId, setSelectedFellowshipId] = useState<string | null>(null);
+  const basename = process.env.NODE_ENV === 'production' ? '/firestone-tools/' : '';
 
   return (
     <GuildContext.Provider value={{ selectedGuildId, setSelectedGuildId }}>
       <FellowshipContext.Provider value={{ selectedFellowshipId, setSelectedFellowshipId }}>
-          <Router basename="/firestone-tools/">
+          <Router basename={basename}>
             <Header />
             <MainContentWrapper />
             <Footer />
